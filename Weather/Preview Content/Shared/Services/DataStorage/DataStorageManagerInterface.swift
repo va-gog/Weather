@@ -6,10 +6,10 @@
 //  Created by Gohar Vardanyan on 25.10.24.
 //
 
-import CoreLocation
+import Foundation
+import RealmSwift
 
 protocol DataStorageManagerInterface {
-    func addWeatherIntoStorage(_ data: WeatherCurrentInfo)
-    func removeWeatherFromStorage(_ data: WeatherCurrentInfo)
-    func fetchAddedWeatherCoordinates() async throws ->  [CLLocationCoordinate2D]
+    func fetchItem<T: Object & Storable>(byId id: String, type: T.Type) -> Storable?
+    func addOrUpdateItem(info: StorableInfo, type: Storable.Type, object: Storable) -> Result<Void, Error>
 }

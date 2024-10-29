@@ -9,8 +9,12 @@ import CoreLocation
 import Combine
 
 final class LocationService: NSObject, CLLocationManagerDelegate, LocationServiceInterface {
-    private var manager: LocationManagerInterface
     var latestLocationObject = PassthroughSubject<CLLocation, LocationError>()
+    var statusSubject = PassthroughSubject<LocationAuthorizationStatus, Never>()
+    
+    private var manager: LocationManagerInterface
+    private let queue = DispatchQueue(label: "LocationServiceQueue")
+    private var lastLocation: CLLocation?
     
     init(manager: LocationManagerInterface = CLLocationManager()) {
         self.manager = manager
@@ -21,7 +25,10 @@ final class LocationService: NSObject, CLLocationManagerDelegate, LocationServic
     }
     
     func startTracking() {
-        manager.startUpdatingLocation()
+        queue.async {
+            self.manager.startUpdatingLocation()
+        }
+        
     }
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
@@ -29,10 +36,35 @@ final class LocationService: NSObject, CLLocationManagerDelegate, LocationServic
             latestLocationObject.send(completion: .failure(LocationError.noLocationAvailable))
             return
         }
-        latestLocationObject.send(location)
+        if let lastLocation = lastLocation {
+            let distance = location.distance(from: lastLocation)
+            if distance < 500 {
+                return
+            }
+        }
+        
+        lastLocation = location
+        queue.async {
+            self.latestLocationObject.send(location)
+        }
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        latestLocationObject.send(completion: .failure(LocationError.noLocationAvailable))
+        queue.async {
+            self.latestLocationObject.send(completion: .failure(LocationError.noLocationAvailable))
+        }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        switch status {
+        case .authorizedWhenInUse, .authorizedAlways:
+            statusSubject.send(.authorized)
+        case .denied, .restricted:
+            statusSubject.send(.denied)
+        case .notDetermined:
+            break
+        @unknown default:
+            break
+        }
     }
 }

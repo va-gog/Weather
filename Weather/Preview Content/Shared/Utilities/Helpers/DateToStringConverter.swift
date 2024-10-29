@@ -14,10 +14,7 @@ struct DateToStringConverter {
         if abs(currentDate.timeIntervalSince(date)) <= timeIntervalThreshold {
             return "now"
         } else {
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "HH"
-            dateFormatter.timeZone = TimeZone.current
-            return dateFormatter.string(from: date)
+            return dataWithFormatter("HH", date: date)
         }
     }
     
@@ -28,12 +25,16 @@ struct DateToStringConverter {
         if calendar.isDate(date, inSameDayAs: currentDate) {
             return "Today"
         } else {
-            let dayFormatter = DateFormatter()
-            dayFormatter.dateFormat = "EEEE"
-            dayFormatter.timeZone = TimeZone.current
-            
-            return dayFormatter.string(from: date)
+            return dataWithFormatter("EEEE", date: date)
         }
+    }
+    
+    private func dataWithFormatter(_ dateFormat: String, date: Date) -> String {
+        let dayFormatter = DateFormatter()
+        dayFormatter.dateFormat = dateFormat
+        dayFormatter.timeZone = TimeZone.current
+        
+        return dayFormatter.string(from: date)
     }
    
 }

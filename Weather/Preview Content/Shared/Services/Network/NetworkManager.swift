@@ -9,6 +9,8 @@ import Foundation
 import Combine
 
 struct NetworkManager: NetworkManagerProtocol {
+    typealias T = Decodable
+    
     private var sessionManager: URLSessionManagerProtocol
     
     init(sessionManager: URLSessionManagerProtocol = URLSessionManager()) {

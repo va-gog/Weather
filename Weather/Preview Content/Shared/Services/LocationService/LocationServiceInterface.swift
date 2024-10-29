@@ -9,6 +9,8 @@ import Combine
 import CoreLocation
 
 protocol LocationServiceInterface {
+    var statusSubject: PassthroughSubject<LocationAuthorizationStatus, Never> { get }
     var latestLocationObject: PassthroughSubject<CLLocation, LocationError> { get }
+    
     func startTracking()
 }

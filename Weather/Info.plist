@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>randomImage</string>
+	</array>
+	<key>GIDClientID</key>
+	<string>857710180788-o7l0u4rqpebln1nc166vdhlu7i6ggh2r.apps.googleusercontent.com</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string></string>
+	</array>
+</dict>
+</plist>

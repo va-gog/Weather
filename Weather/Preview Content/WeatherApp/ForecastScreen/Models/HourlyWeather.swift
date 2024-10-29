@@ -27,4 +27,11 @@ struct HourlyWeather: Decodable, Identifiable {
         let date = Date(timeIntervalSince1970: dt)
         name = DateToStringConverter().convertHour(date: date)
     }
+    
+    init(id: UUID = UUID(), name: String, temp: Double, weather: [Weather] = []) {
+        self.id = id
+        self.name = name
+        self.temp = temp
+        self.weather = weather
+    }
 }

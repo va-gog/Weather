@@ -7,49 +7,81 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "55AF609D-18E9-4FEA-96ED-A8BA470C4A8F"
-            shouldBeEnabled = "No"
+            uuid = "8C1B0E3C-7249-48ED-9912-DC9C2ADFC7B4"
+            shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Weather/MainScreenViewModel.swift"
+            filePath = "WeatherTests/ViewModelsTests/ForecastScreenViewModelTests/WeatherDetailsViewModelTests.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "130"
-            endingLineNumber = "130"
-            landmarkName = "fetchWeatherInfo()"
+            startingLineNumber = "144"
+            endingLineNumber = "144"
+            landmarkName = "testTopViewPresentationInfoFetch()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "26AF7BAB-B162-462A-AAB5-0F09FAD33299"
+            uuid = "1F28FAC2-C580-40CC-AB58-DA1D04EA62FE"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Weather/WeatherView.swift"
+            filePath = "Weather/Preview Content/WeatherApp/ForecastScreen/ViewModel/WeatherDetailsViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "133"
-            endingLineNumber = "133"
-            landmarkName = "body"
-            landmarkType = "24">
+            startingLineNumber = "92"
+            endingLineNumber = "92"
+            landmarkName = "topViewPresentationInfo()"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "595985DE-3035-4370-8C24-BA9056483102"
+            uuid = "BAF78012-FA1C-4881-9934-A62BDC83F725"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Weather/WeatherView.swift"
+            filePath = "Weather/Preview Content/WeatherApp/ForecastScreen/ViewModel/WeatherDetailsViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "140"
-            endingLineNumber = "140"
-            landmarkName = "body"
-            landmarkType = "24">
+            startingLineNumber = "36"
+            endingLineNumber = "36"
+            landmarkName = "init(selectedCity:style:networkManager:infoConverter:currentInfo:addedWaetherInfo:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "E555A5A6-9F2F-4ADE-92CE-246A409916B4"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Weather/Preview Content/WeatherApp/ForecastScreen/ViewModel/WeatherDetailsViewModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "62"
+            endingLineNumber = "62"
+            landmarkName = "fetchWeatherCurrentInfo(unit:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "FAAB7901-16EC-4A17-AAB7-C82CB5C18110"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "WeatherTests/ViewModelsTests/ForecastScreenViewModelTests/WeatherDetailsViewModelTests.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "155"
+            endingLineNumber = "155"
+            landmarkName = "testTopViewPresentationInfoFetch()"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

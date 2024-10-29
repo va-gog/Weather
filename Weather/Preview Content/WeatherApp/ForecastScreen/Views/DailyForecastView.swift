@@ -8,32 +8,31 @@
 import SwiftUI
 
 struct DailyForecastView: View {
-    var presentationInfo: DailyForecastViewPresentationInfo
+    var info: DailyForecastViewInfo
+    var presentationInfo: DailyForecastViewpresentationInfo
 
     var body: some View {
         HStack {
             HStack {
-                Text(presentationInfo.name)
+                Text(info.name)
                 Spacer()
             }
             Spacer()
             HStack {
-                Image(systemName:  presentationInfo.icon)
+                Image(systemName:  info.icon)
                
-                    .renderingMode(.original)
-                    .shadow(radius: 5)
-                Text(presentationInfo.dailyForecast)
+                    .renderingMode(presentationInfo.imageRenderMode)
+                    .shadow(radius: presentationInfo.imageShodow)
+                Text(info.dailyForecast)
                 Spacer()
             }
             Spacer()
 
             HStack {
-                Spacer()
-                Text(presentationInfo.tempMin)
-                Text(presentationInfo.tempMax)
-                Spacer()
+                Text(info.tempMin)
+                Text(info.tempMax)
             }
-            .bold()
+            .bold(presentationInfo.rangeTextBoldIsActive)
           
         }
         .padding()
