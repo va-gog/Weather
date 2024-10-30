@@ -14,6 +14,8 @@ private enum FocusableField: Hashable {
   case confirmPassword
 }
 
+// TODO: Can be changed to get texts and images from out
+
 struct AuthenticationView: View {
   @EnvironmentObject var viewModel: AuthenticationViewModel
   @Environment(\.dismiss) var dismiss
@@ -29,8 +31,8 @@ struct AuthenticationView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             
             HStack {
-                Image(systemName: "at")
-                TextField("Email", text: $viewModel.email)
+                Image(systemName: AppIcons.email)
+                TextField(LocalizedText.email, text: $viewModel.email)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
                     .focused($focus, equals: .email)
@@ -39,35 +41,47 @@ struct AuthenticationView: View {
                         self.focus = .password
                     }
             }
+            .onChange(of: focus) { _, isFocused in
+                if focus == .password, type == .login {
+                    viewModel.autofillPassword()
+                }
+            }
             .padding(.vertical, 6)
-            .background(Divider(), alignment: .bottom)
+            .background(Divider(),
+                        alignment: .bottom)
             .padding(.bottom, 4)
             
             HStack {
-                Image(systemName: "lock")
-                SecureField("Password", text: $viewModel.password)
-                    .focused($focus, equals: .password)
+                Image(systemName: AppIcons.lock)
+                SecureField(LocalizedText.password,
+                            text: $viewModel.password)
+                    .focused($focus,
+                             equals: .password)
                     .submitLabel(.next)
                     .onSubmit {
                         self.focus = .confirmPassword
                     }
             }
             .padding(.vertical, 6)
-            .background(Divider(), alignment: .bottom)
+            .background(Divider(),
+                        alignment: .bottom)
             .padding(.bottom, 8)
             
             if type == .signUp {
                 HStack {
-                    Image(systemName: "lock")
-                    SecureField("Confirm password", text: $viewModel.confirmPassword)
-                        .focused($focus, equals: .confirmPassword)
+                    Image(systemName: AppIcons.lock)
+                    SecureField(LocalizedText.confirmPassword,
+                                text: $viewModel.confirmPassword)
+                        .focused($focus,
+                                 equals: .confirmPassword)
                         .submitLabel(.go)
                         .onSubmit {
                             signAction()
                         }
                 }
                 .padding(.vertical, 6)
-                .background(Divider(), alignment: .bottom)
+                .background(Divider(),
+                            alignment: .bottom)
                 .padding(.bottom, 8)
             }
             
@@ -81,7 +95,7 @@ struct AuthenticationView: View {
             
             Button(action: signAction) {
                 if viewModel.authenticationState != .authenticating {
-                    Text(type.rawValue)
+                    Text(type.buttonTitle)
                         .padding(.vertical, 8)
                         .frame(maxWidth: .infinity)
                 } else {

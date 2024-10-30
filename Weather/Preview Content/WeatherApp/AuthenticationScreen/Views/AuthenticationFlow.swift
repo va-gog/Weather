@@ -7,25 +7,25 @@
 
 import Foundation
 
-enum AuthenticationFlow: String {
-    case login = "Log in"
-    case signUp = "Sign up"
+enum AuthenticationFlow {
+    case login
+    case signUp
     
     var changeModeText: String {
         return switch self {
         case .login:
-            NSLocalizedString("Don't have an account yet?", comment: "")
+            LocalizedText.noAccountQuestion
         case .signUp:
-            NSLocalizedString("Already have an account?", comment: "")
+            LocalizedText.haveAccountQuestion
         }
     }
     
     var titile: String {
         return switch self {
         case .login:
-            NSLocalizedString("Login?", comment: "")
+            LocalizedText.loginQuestion
         case .signUp:
-            NSLocalizedString("Sign up", comment: "")
+            LocalizedText.signUp
         }
     }
     
@@ -36,6 +36,15 @@ enum AuthenticationFlow: String {
         case .signUp:
                 .login
             
+        }
+    }
+    
+    var buttonTitle: String {
+        return switch self {
+        case .login:
+            LocalizedText.login
+        case .signUp:
+            LocalizedText.signUp
         }
     }
 }

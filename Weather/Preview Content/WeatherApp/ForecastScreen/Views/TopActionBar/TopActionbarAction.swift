@@ -13,9 +13,9 @@ enum TopActionbarAction {
     var title: String {
        return switch self {
         case.add:
-            NSLocalizedString("Add", comment: "")
+           LocalizedText.add
             case .cancel:
-            NSLocalizedString("Cancel", comment: "")
+           LocalizedText.cancel
         }
     }
 }

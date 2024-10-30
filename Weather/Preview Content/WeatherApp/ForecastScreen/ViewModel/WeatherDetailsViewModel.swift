@@ -116,12 +116,12 @@ final class WeatherDetailsViewModel: ObservableObject {
         if let currentInfo {
             let daily = forecastInfo.daily[index]
             return DailyForecastViewInfo(name: daily.name,
-                                                     icon: weatherIcon(for: daily.weather.first?.main ?? ""),
-                                                     dailyForecast: daily.weather.first?.main ?? "",
-                                                     tempMin: "L:" + infoConverter.convertTemperatureToText(temp: daily.temp.min,
-                                                                                                     unit: currentInfo.unit),
-                                                     tempMax: "H:" + infoConverter.convertTemperatureToText(temp: daily.temp.max,
-                                                                                                     unit: currentInfo.unit))
+                                         icon: weatherIcon(for: daily.weather.first?.main ?? ""),
+                                         dailyForecast: daily.weather.first?.main ?? "",
+                                         tempMin: LocalizedText.high + ":" + infoConverter.convertTemperatureToText(temp: daily.temp.min,
+                                                                                                                    unit: currentInfo.unit),
+                                         tempMax:LocalizedText.low + ":" + infoConverter.convertTemperatureToText(temp: daily.temp.max,
+                                                                                                                  unit: currentInfo.unit))
         }
         return nil
     }
@@ -129,15 +129,15 @@ final class WeatherDetailsViewModel: ObservableObject {
     func weatherIcon(for condition: String) -> String {
         switch condition {
         case "Clear":
-            return "sun.max.fill"
+            return AppIcons.clear
         case "Clouds":
-            return "cloud.fill"
+            return  AppIcons.clouds
         case "Rain":
-            return "cloud.rain.fill"
+            return  AppIcons.rain
         case "Snow":
-            return "cloud.snow.fill"
+            return  AppIcons.snow
         default:
-            return "questionmark"
+            return  AppIcons.otherWeather
         }
     }
 }

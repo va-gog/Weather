@@ -65,10 +65,9 @@ struct MainView: View {
                             LoadingView()
                         } else if viewModel.searchState == .failed || viewModel.searchState == .empty {
                             Spacer()
-                            EmptyView(title: NSLocalizedString("No Results",
+                            EmptyView(title: NSLocalizedString(LocalizedText.noResultTitle,
                                                                comment: ""),
-                                      subtitle: NSLocalizedString("No result found for '\(searchText)'",
-                                                                  comment: ""),
+                                      subtitle: "\(LocalizedText.noResultSubtitle) '\(searchText)'",
                                       presentationInfo: EmptyViewPresentationInfo())
                             Spacer()
                         } else if viewModel.searchState == .success {
@@ -122,14 +121,14 @@ struct MainView: View {
     
     private var notAuthenticatedView: some View {
         VStack {
-            Text(NSLocalizedString("Location access is required to use this feature.", comment: ""))
+            Text(LocalizedText.locationAccess)
                 .padding()
             Button(action: {
                 if let url = URL(string: UIApplication.openSettingsURLString) {
                     UIApplication.shared.open(url)
                 }
             }) {
-                Text(NSLocalizedString("Open Settings", comment: ""))
+                Text(LocalizedText.openSettings)
                     .foregroundColor(.blue)
                     .padding()
                     .background(Color(.systemGray5))

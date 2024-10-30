@@ -12,7 +12,7 @@ struct DateToStringConverter {
         let currentDate = Date()
         
         if abs(currentDate.timeIntervalSince(date)) <= timeIntervalThreshold {
-            return "now"
+            return LocalizedText.now
         } else {
             return dataWithFormatter("HH", date: date)
         }
@@ -23,7 +23,7 @@ struct DateToStringConverter {
         let currentDate = calendar.startOfDay(for: Date())
 
         if calendar.isDate(date, inSameDayAs: currentDate) {
-            return "Today"
+            return LocalizedText.today
         } else {
             return dataWithFormatter("EEEE", date: date)
         }
