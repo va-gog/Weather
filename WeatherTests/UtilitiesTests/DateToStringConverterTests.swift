@@ -26,7 +26,7 @@ class DateToStringConverterTests: XCTestCase {
         let date = Date()
         
         let result = dateToStringConverter.convertHour(date: date)
-        XCTAssertEqual(result, "now", "The convertHour method should return 'now' for the current time.")
+        XCTAssertEqual(result, "Now".localize(), "The convertHour method should return 'now' for the current time.")
     }
     
     func testConvertHourWithHoursAgo() {
@@ -44,7 +44,7 @@ class DateToStringConverterTests: XCTestCase {
         let date = Date()
         
         let result = dateToStringConverter.convertDay(date: date)
-        XCTAssertEqual(result, "Today", "The convertDay method should return 'Today' for the current day.")
+        XCTAssertEqual(result, "Today".localize(), "The convertDay method should return 'Today' for the current day.")
     }
     
     func testConvertDayYesterday() {
