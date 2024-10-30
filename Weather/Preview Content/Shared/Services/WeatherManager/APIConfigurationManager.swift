@@ -11,6 +11,6 @@ struct APIConfigurationManager {
     static var apiKey: String {
         /*fetch this securely, possibly from environment variables or secure storage
          This could be configured per environment in a CI/CD setup */
-        ""
+        "YOUR_API_KEY"
     }
 }
