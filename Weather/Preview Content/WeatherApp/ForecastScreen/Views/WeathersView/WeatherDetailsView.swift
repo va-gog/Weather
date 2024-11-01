@@ -82,6 +82,8 @@ struct WeatherDetailsView: View {
                         coordinator.viewModel.dismiss()
                         coordinator.deleteButtonPressed()
                     case Tab.signOut.title:
+                        coordinator.signoutButtonPressed()
+                        coordinator.viewModel.dismiss()
                         print("")
                     default:
                         assertionFailure("Action for tab item isn't implemented")

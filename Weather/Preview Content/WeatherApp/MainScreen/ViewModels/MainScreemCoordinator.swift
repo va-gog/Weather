@@ -11,13 +11,16 @@ import SwiftUI
 
 @MainActor
 final class MainScreemCoordinator: ObservableObject {
-    private var cancellables: [AnyCancellable] = []
-    
-    @Published var locationStatus: LocationAuthorizationStatus = .notDetermined
     @ObservedObject var viewModel: MainScreenViewModel
+    @Published var locationStatus: LocationAuthorizationStatus = .notDetermined
     
-    init(viewModel: MainScreenViewModel) {
+    var parent: AuthenticationScreenCoordinator
+
+    private var cancellables: [AnyCancellable] = []
+
+    init(viewModel: MainScreenViewModel, parent: AuthenticationScreenCoordinator) {
         self.viewModel = viewModel
+        self.parent = parent
         viewModel.$locationStatus
                     .receive(on: RunLoop.main)
                     .assign(to: &$locationStatus)
@@ -25,6 +28,10 @@ final class MainScreemCoordinator: ObservableObject {
     
     func deleteButtonPressed(info: CurrentWeather) {
         viewModel.deleteButtonPressed(info: info)
+    }
+    
+    func signoutButtonPressed() {
+        parent.changeState(.unauthenticated)
     }
     
     func updateLocation(status: LocationAuthorizationStatus) {

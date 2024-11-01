@@ -18,6 +18,7 @@ final class WeatherDetailsViewModel: ObservableObject {
     
     private var selectedCity: City
     private var networkManager: any NetworkManagerProtocol
+    private var auth: AuthInterface
     private var infoConverter: WeatherInfoToPresentationInfoConverter
     private var addedWaetherInfo = PassthroughSubject<WeatherCurrentInfo, Never>()
     private var cancellables: [AnyCancellable] = []
@@ -25,11 +26,13 @@ final class WeatherDetailsViewModel: ObservableObject {
     init(selectedCity: City,
          style: Binding<WeatherDetailsViewStyle>,
          networkManager: any NetworkManagerProtocol = NetworkManager(),
+         auth: AuthInterface = AuthWrapper(),
          infoConverter: WeatherInfoToPresentationInfoConverter = WeatherInfoToPresentationInfoConverter(),
          currentInfo: WeatherCurrentInfo? = nil,
          addedWaetherInfo: PassthroughSubject<WeatherCurrentInfo, Never> = PassthroughSubject<WeatherCurrentInfo, Never>()){
         self.selectedCity = selectedCity
         self.networkManager = networkManager
+        self.auth = auth
         self.infoConverter = infoConverter
         self.currentInfo = currentInfo
         self.addedWaetherInfo = addedWaetherInfo
@@ -123,6 +126,10 @@ final class WeatherDetailsViewModel: ObservableObject {
                                                                                                                   unit: currentInfo.unit))
         }
         return nil
+    }
+    
+    func signedOut() throws {
+        try auth.signOut()
     }
 
     func weatherIcon(for condition: String) -> String {

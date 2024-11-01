@@ -31,8 +31,16 @@ final class WeatherDetailsScreenCoordinator: ObservableObject {
     }
     
     func deleteButtonPressed() {
-        // TODO: Remove from database
         guard let currentInfo = viewModel.currentInfo else { return }
         parent.deleteButtonPressed(info: currentInfo.currentWeather)
+    }
+    
+    func signoutButtonPressed() {
+        do {
+            try viewModel.signedOut()
+            parent.signoutButtonPressed()
+        } catch {
+            print("Signing out failed")
+        }
     }
 }

@@ -19,7 +19,7 @@ class AuthenticationViewModel: ObservableObject {
     @Published var flow: AuthenticationFlow = .login
     
     @Published var isValid  = false
-    @Published var authenticationState: AuthenticationState = .unauthenticated
+    @Published var authenticationState: AuthenticationState = .unauthenticated 
     @Published var errorMessage = ""
     @Published var user: User?
     @Published var displayName: String = ""
@@ -31,9 +31,7 @@ class AuthenticationViewModel: ObservableObject {
     init(auth: AuthInterface, keychain: KeychainManagerInterface = KeychainManager()) {
         self.keychain = keychain
         self.auth = auth
-        
-        registerAuthStateHandler()
-        
+                
         $flow
             .combineLatest($email, $password, $confirmPassword)
             .map { flow, email, password, confirmPassword in
@@ -66,9 +64,10 @@ class AuthenticationViewModel: ObservableObject {
         confirmPassword = ""
     }
     
-    private  func registerAuthStateHandler() {
+    func registerAuthStateHandler() {
         if authStateHandler == nil {
             authStateHandler = auth.addStateDidChangeListener(completion: { auth, user in
+                guard self.user != user else { return }
                 self.user = user
                 self.authenticationState = user == nil ? .unauthenticated : .authenticated
             })
