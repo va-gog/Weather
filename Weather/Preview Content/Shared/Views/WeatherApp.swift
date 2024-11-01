@@ -18,8 +18,7 @@ struct WeatherApp: App {
         WindowGroup {
             NavigationView {
                 AuthenticatedView {
-                    Text(NSLocalizedString("You need to be logged in to use this app.",
-                                           comment: ""))
+                    Text(LocalizedText.needLogin)
                 } content: {
                     MainView()
                         .environmentObject(MainScreemCoordinator(viewModel: mainViewModel))

@@ -16,13 +16,13 @@ final class MockAuth: AuthInterface {
     }
     
     func createUser(withEmail email: String, password: String) async throws {
-        guard let user else {
+        guard user != nil else {
             throw AuthenticationError.signin
         }
     }
     
     func signIn(withEmail email: String, password: String) async throws {
-        guard let user else {
+        guard user != nil else {
             throw AuthenticationError.signin
         }
     }

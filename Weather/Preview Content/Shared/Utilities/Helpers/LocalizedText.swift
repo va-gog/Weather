@@ -35,7 +35,7 @@ enum LocalizedText {
     
     static let noResultTitle = "No Results".localize()
     static let noResultSubtitle = "No result found for".localize()
-    static let openSettings = "Open Settings"
-    static let locationAccess = "Location access is required to use this feature."
-
+    static let openSettings = "Open Settings".localize()
+    static let locationAccess = "Location access is required to use this feature.".localize()
+    static let needLogin = "You need to be logged in to use this app.".localize()
 }

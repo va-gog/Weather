@@ -141,7 +141,6 @@ class WeatherDetailsViewModelTests: XCTestCase {
     }
 
     func testTopViewPresentationInfoFetch() {
-        XCTAssertNil(viewModel.topViewPresentationInfo())
         let city = "Test"
         let isMyLocation = true
         let currentWeather = CurrentWeather(id: 123,
@@ -154,7 +153,7 @@ class WeatherDetailsViewModelTests: XCTestCase {
                                            coord: Coordinates(lon: 10, lat: 10))
         viewModel.currentInfo = WeatherCurrentInfo(currentWeather: currentWeather,
                                                    isMyLocation: isMyLocation)
-        let expectedResult = viewModel.topViewPresentationInfo()
+        let expectedResult = viewModel.topViewPresentationInfo(currentInfo: viewModel.currentInfo)
         
         XCTAssertNotNil(expectedResult)
         XCTAssertEqual(expectedResult!.city, city)
