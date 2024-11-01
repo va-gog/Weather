@@ -1,5 +1,5 @@
 //
-//  SignupView.swift
+//  AuthenticationView.swift
 //  Weather
 //
 //  Created by Gohar Vardanyan on 26.10.24.
@@ -19,20 +19,21 @@ private enum FocusableField: Hashable {
 struct AuthenticationView: View {
   @EnvironmentObject var viewModel: AuthenticationViewModel
   @Environment(\.dismiss) var dismiss
-  @Binding var type: AuthenticationFlow
+    @Binding var type: AuthenticationFlow
 
   @FocusState private var focus: FocusableField?
 
     var body: some View {
         VStack {
-            Text(type.titile)
+            Text(viewModel.flow.titile)
                 .font(.largeTitle)
                 .fontWeight(.bold)
                 .frame(maxWidth: .infinity, alignment: .leading)
             
             HStack {
                 Image(systemName: AppIcons.email)
-                TextField(LocalizedText.email, text: $viewModel.email)
+                TextField(LocalizedText.email,
+                          text: $viewModel.email)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
                     .focused($focus, equals: .email)
@@ -42,7 +43,7 @@ struct AuthenticationView: View {
                     }
             }
             .onChange(of: focus) { _, isFocused in
-                if focus == .password, type == .login {
+                if focus == .password, viewModel.flow == .login {
                     viewModel.autofillPassword()
                 }
             }
@@ -67,7 +68,7 @@ struct AuthenticationView: View {
                         alignment: .bottom)
             .padding(.bottom, 8)
             
-            if type == .signUp {
+            if viewModel.flow == .signUp {
                 HStack {
                     Image(systemName: AppIcons.lock)
                     SecureField(LocalizedText.confirmPassword,
@@ -95,7 +96,7 @@ struct AuthenticationView: View {
             
             Button(action: signAction) {
                 if viewModel.authenticationState != .authenticating {
-                    Text(type.buttonTitle)
+                    Text(viewModel.flow.buttonTitle)
                         .padding(.vertical, 8)
                         .frame(maxWidth: .infinity)
                 } else {
@@ -110,9 +111,9 @@ struct AuthenticationView: View {
             .buttonStyle(.borderedProminent)
             
             HStack {
-                Text(type.changeModeText)
+                Text(viewModel.flow.changeModeText)
                 Button(action: { viewModel.switchFlow() }) {
-                    Text(type.next.titile)
+                    Text(viewModel.flow.next.titile)
                         .fontWeight(.semibold)
                         .foregroundColor(.blue)
                 }
@@ -125,11 +126,11 @@ struct AuthenticationView: View {
     }
     
     private func signAction() {
-      Task {
-          if await viewModel.signAction() == true {
-          dismiss()
+        Task {            
+            if await viewModel.signAction() {
+                dismiss()
+            }
         }
-      }
     }
 }
 

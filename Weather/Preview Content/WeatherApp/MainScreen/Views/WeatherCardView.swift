@@ -9,7 +9,7 @@ import SwiftUI
 
 struct WeatherCardView: View {
     var info: WeatherCardViewInfo
-    var presentationInfo: WeatherCardViewPresentationInfo
+    var presentationInfo = WeatherCardViewPresentationInfo()
     
     private let columns = [
         GridItem(.flexible(),

@@ -28,6 +28,11 @@ final class MainScreenViewModel: ObservableObject {
     private var auth: AuthInterface
     private var cancellables: [AnyCancellable] = []
     
+    func deleteButtonPressed(info: CurrentWeather) {
+        guard let index = weatherInfo.firstIndex(where:  {$0.currentWeather.name == info.name } ) else { return }
+        weatherInfo.remove(at: index)
+    }
+    
     init(locationService: LocationServiceInterface = LocationService(),
          storageManager: DataStorageManagerInterface = StorageManager(),
          networkManager: any NetworkManagerProtocol = NetworkManager(),

@@ -7,8 +7,9 @@
 
 import Foundation
 
-enum Tab: Int, CaseIterable, TabItem {
-    case signOut, remove
+enum Tab: Int, TabItem {    
+    case signOut
+    case remove
 
     var title: String {
         switch self {

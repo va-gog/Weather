@@ -8,14 +8,14 @@
 
 import SwiftUI
 
-struct BottomBar<T: TabItem>: View {
+struct ToolbarView<T: TabItem>: View {
     @State private var selectedRect: CGRect = .zero
-    @State private var selectedTab: T
+    @State private var selectedTab: T?
     
     private var uiAttributes: BottomBarUIAttributes
     private var onTab: (T) -> Void
     
-    init(selectedTab: T, attributes: BottomBarUIAttributes = BottomBarUIAttributes(), onTab: @escaping (T) -> Void) {
+    init(selectedTab: T?, attributes: BottomBarUIAttributes = BottomBarUIAttributes(), onTab: @escaping (T) -> Void) {
         self.selectedTab = selectedTab
         self.uiAttributes = attributes
         self.onTab = onTab
@@ -84,7 +84,7 @@ struct BottomBar<T: TabItem>: View {
         }
     }
     
-    private func updateSelectedRect(for tab: T, with geometry: GeometryProxy) {
+    private func updateSelectedRect(for tab: T?, with geometry: GeometryProxy) {
         if selectedTab == tab {
             selectedRect = geometry.frame(in: .global)
         }

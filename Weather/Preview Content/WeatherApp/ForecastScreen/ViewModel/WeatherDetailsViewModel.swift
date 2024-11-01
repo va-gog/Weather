@@ -5,7 +5,6 @@
 //  Created by Gohar Vardanyan on 25.10.24.
 //
 
-import Foundation
 import Combine
 import CoreLocation
 import SwiftUI
@@ -88,7 +87,7 @@ final class WeatherDetailsViewModel: ObservableObject {
             
     }
     
-    func topViewPresentationInfo() -> TopViewInfo? {
+    func topViewPresentationInfo(currentInfo: WeatherCurrentInfo?) -> TopViewInfo? {
         if let currentInfo {
             return TopViewInfo(name: infoConverter.currentLocationTitle(isMyLocation: currentInfo.isMyLocation,
                                                                         name: currentInfo.currentWeather.name),
@@ -101,7 +100,7 @@ final class WeatherDetailsViewModel: ObservableObject {
         return nil
     }
     
-    func hourlyViewPresentationInfo(index: Int) -> HourlyForecastViewInfo? {
+    func hourlyViewPresentationInfo(index: Int, currentInfo: WeatherCurrentInfo?) -> HourlyForecastViewInfo? {
         if let currentInfo {
             let hourly = forecastInfo.hourly[index]
             return HourlyForecastViewInfo(name: hourly.name,

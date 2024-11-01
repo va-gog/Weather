@@ -11,7 +11,6 @@ import MapKit
 import FirebaseAuth
 
 struct MainView: View {
-    @StateObject var viewModel: MainScreenViewModel
     @State private var searchText = ""
     
     @State private var searchCancellable: AnyCancellable?
@@ -19,97 +18,101 @@ struct MainView: View {
     @State private var isOverlayPresented = false
     @State private var selectedCity: City? = nil
     
-    var presentationInfo: MainViewPresentationInfo
+    @EnvironmentObject var coordinator: MainScreemCoordinator
+    
+    private var presentationInfo = MainViewPresentationInfo()
     
     var body: some View {
-        if viewModel.locationStatus == .authorized {
-            NavigationView {
-                VStack {
-                        SearchView(searchText: $searchText,
-                                   icon: presentationInfo.searchIcon,
-                                   placeholder: presentationInfo.searchPlaceholder,
-                                   closeIcon: presentationInfo.closeIcon,
-                                   presentationInfo: SearchViewPresentationInfo()) { newValue in
-                            searchSubject.send(newValue)
-                        }
-                       
-                    .frame(height: presentationInfo.searchHeight)
-                    .background(Color(presentationInfo.searchBackgroundColor))
-                    .cornerRadius(presentationInfo.cornerradius)
-                    .padding(.horizontal)
-                    
-                    if searchText.isEmpty {
-                        ScrollView {
-                            LazyVStack(spacing: presentationInfo.interitemSapec) {
-                                ForEach(viewModel.weatherInfo) { info in
-                                    let cardInfo = viewModel.weatherCardViewPresentationInfo(weatherInfo: info)
-                                    WeatherCardView(info: cardInfo, presentationInfo: WeatherCardViewPresentationInfo())
-                                        .padding(.horizontal,
-                                                 presentationInfo.interitemSapec)
+            if coordinator.locationStatus == .authorized {
+                NavigationView {
+                    VStack {
+                            SearchView(searchText: $searchText,
+                                       icon: presentationInfo.searchIcon,
+                                       placeholder: presentationInfo.searchPlaceholder,
+                                       closeIcon: presentationInfo.closeIcon,
+                                       presentationInfo: SearchViewPresentationInfo()) { newValue in
+                                searchSubject.send(newValue)
+                            }
+                           
+                        .frame(height: presentationInfo.searchHeight)
+                        .background(Color(presentationInfo.searchBackgroundColor))
+                        .cornerRadius(presentationInfo.cornerradius)
+                        .padding(.horizontal)
+                        
+                        if searchText.isEmpty {
+                            ScrollView {
+                                LazyVStack(spacing: presentationInfo.interitemSapec) {
+                                    ForEach(coordinator.viewModel.weatherInfo) { info in
+                                        let cardInfo = coordinator.viewModel.weatherCardViewPresentationInfo(weatherInfo: info)
+                                        WeatherCardView(info: cardInfo, presentationInfo: WeatherCardViewPresentationInfo())
+                                            .padding(.horizontal,
+                                                     presentationInfo.interitemSapec)
+                                            .onTapGesture {
+                                                withAnimation {
+                                                    coordinator.viewModel.itemSelected(name: info.currentWeather.name)
+                                                    selectedCity = City(name: info.currentWeather.name,
+                                                                        lat: info.currentWeather.coord.lat,
+                                                                        lon: info.currentWeather.coord.lon)
+                                                }
+                                            }
+                                    }
+                                }
+                                .padding(.vertical, presentationInfo.interitemSapec)
+                                .padding(.horizontal, presentationInfo.interitemSapec)
+                                
+                            }
+                        } else {
+                            if coordinator.viewModel.searchState == .searching {
+                                LoadingView()
+                            } else if coordinator.viewModel.searchState == .failed || coordinator.viewModel.searchState == .empty {
+                                Spacer()
+                                EmptyView(title: NSLocalizedString(LocalizedText.noResultTitle,
+                                                                   comment: ""),
+                                          subtitle: "\(LocalizedText.noResultSubtitle) '\(searchText)'",
+                                          presentationInfo: EmptyViewPresentationInfo())
+                                Spacer()
+                            } else if coordinator.viewModel.searchState == .success {
+                                List(coordinator.viewModel.searchResult, id: \.self) { city in
+                                    Text("\(city.name), \(city.country ?? "")")
                                         .onTapGesture {
                                             withAnimation {
-                                                viewModel.itemSelected(name: nil)
-                                                selectedCity = City(name: info.currentWeather.name,
-                                                                    lat: info.currentWeather.coord.lat,
-                                                                    lon: info.currentWeather.coord.lon)
+                                                coordinator.viewModel.itemSelected(name: city.name)
+                                                selectedCity = city
                                             }
                                         }
                                 }
                             }
-                            .padding(.vertical, presentationInfo.interitemSapec)
-                            .padding(.horizontal, presentationInfo.interitemSapec)
-                            
                         }
-                    } else {
-                        if viewModel.searchState == .searching {
-                            LoadingView()
-                        } else if viewModel.searchState == .failed || viewModel.searchState == .empty {
-                            Spacer()
-                            EmptyView(title: NSLocalizedString(LocalizedText.noResultTitle,
-                                                               comment: ""),
-                                      subtitle: "\(LocalizedText.noResultSubtitle) '\(searchText)'",
-                                      presentationInfo: EmptyViewPresentationInfo())
-                            Spacer()
-                        } else if viewModel.searchState == .success {
-                            List(viewModel.searchResult, id: \.self) { city in
-                                Text("\(city.name), \(city.country ?? "")")
-                                    .onTapGesture {
-                                        withAnimation {
-                                            viewModel.itemSelected(name: city.name)
-                                            selectedCity = city
-                                        }
-                                    }
-                            }
+                        Spacer()
+                    }
+                    .navigationTitle(presentationInfo.navigationTitle)
+                    .navigationBarTitleDisplayMode(.inline)
+                }
+                .overlay(
+                    Group {
+                        if let selectedCity, coordinator.viewModel.detailedViewStyle != .dismissed {
+                            let model = WeatherDetailsViewModel(selectedCity: selectedCity,
+                                                                style: $coordinator.viewModel.detailedViewStyle,
+                                                                addedWaetherInfo: coordinator.viewModel.addedWaetherInfo)
+                            WeatherDetailsView(coordinator: WeatherDetailsScreenCoordinator(parent: coordinator,
+                                                                                            viewModel: model),
+                                               presentationInfo: WeatherDetailsViewPresentationInfo())
+                            .transition(.move(edge: .bottom))
                         }
                     }
-                    Spacer()
+                )
+                .onAppear {
+                    onApperaAction()
                 }
-                .navigationTitle(presentationInfo.navigationTitle)
-                .navigationBarTitleDisplayMode(.inline)
-            }
-            .overlay(
-                Group {
-                    if let selectedCity, viewModel.detailedViewStyle != .dismissed {
-                        let model = WeatherDetailsViewModel(selectedCity: selectedCity,
-                                                            style: $viewModel.detailedViewStyle,
-                                                            addedWaetherInfo: viewModel.addedWaetherInfo)
-                        WeatherDetailsView(viewModel: model,
-                                           presentationInfo: WeatherDetailsViewPresentationInfo())
-                        .transition(.move(edge: .bottom))
-                    }
+                .onDisappear {
+                    searchCancellable?.cancel()
                 }
-            )
-            .onAppear {
-                onApperaAction()
+                Spacer()
+            } else {
+                Spacer()
+                notAuthenticatedView
             }
-            .onDisappear {
-                searchCancellable?.cancel()
-            }
-            Spacer()
-        } else {
-            Spacer()
-            notAuthenticatedView
-        }
+
     }
     
     func openAppSettings() {
@@ -142,11 +145,11 @@ struct MainView: View {
             .debounce(for: .seconds(1), scheduler: RunLoop.main)
             .removeDuplicates()
             .sink { searchTerm in
-                viewModel.searchWith(query: searchTerm)
+                coordinator.viewModel.searchWith(query: searchTerm)
             }
         Task {
-            viewModel.requestNotificationPermission()
-            await viewModel.fetchWeatherInfo()
+            coordinator.viewModel.requestNotificationPermission()
+            await coordinator.viewModel.fetchWeatherInfo()
         }
     }
     
