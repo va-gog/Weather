@@ -18,24 +18,24 @@
    with the day’s high and low temperatures. Notification permissions are requested when the user initially opens the Weather app.
 
 ## **APIs Used**
-- • OpenWeather One Call API
-- • OpenWeather Current Weather Data API
-- • OpenWeather Geocoding API
+- OpenWeather One Call API
+- OpenWeather Current Weather Data API
+- OpenWeather Geocoding API
 
 ## **External Libraries**
-- • Realm for data persistence
-- • Firebase for authentication and user data management
+- Realm for data persistence
+- Firebase for authentication and user data management
 
 ## **Native SDKs**
-- • CoreLocation for location handling
-- • BackgroundTasks for scheduling daily updates
-- • UserNotifications for delivering weather notifications
-- • Keychain for securely storing sensitive data
+- CoreLocation for location handling
+- BackgroundTasks for scheduling daily updates
+- UserNotifications for delivering weather notifications
+- Keychain for securely storing sensitive data
 
 ## **Architecture**
-- • Coordinator Pattern for managing navigation
-- • MVVM (Model-View-ViewModel) for a clean and testable structure
-- • Feature-Based Structure for modular and organized code
+- Coordinator Pattern for managing navigation
+- MVVM (Model-View-ViewModel) for a clean and testable structure
+- Feature-Based Structure for modular and organized code
 
 ## **Testing**
-- • Unit Testing for verifying core functionality
+- Unit Testing for verifying core functionality
