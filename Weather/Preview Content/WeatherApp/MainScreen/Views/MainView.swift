@@ -23,7 +23,10 @@ struct MainView: View {
     private var presentationInfo = MainViewPresentationInfo()
     
     var body: some View {
-            if coordinator.locationStatus == .authorized {
+        if coordinator.locationStatus != .authorized {
+            Spacer()
+            locationPermitionView
+        } else {
                 NavigationView {
                     VStack {
                             SearchView(searchText: $searchText,
@@ -108,9 +111,6 @@ struct MainView: View {
                     searchCancellable?.cancel()
                 }
                 Spacer()
-            } else {
-                Spacer()
-                notAuthenticatedView
             }
 
     }
@@ -122,7 +122,7 @@ struct MainView: View {
         }
     }
     
-    private var notAuthenticatedView: some View {
+    private var locationPermitionView: some View {
         VStack {
             Text(LocalizedText.locationAccess)
                 .padding()
