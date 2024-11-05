@@ -14,38 +14,59 @@ final class WeatherDetailsViewModel: ObservableObject {
     @Published var forecastInfo = WeatherForecast(hourly: [], daily: [])
     @Published var fetchState: FetchState = .none
     
-    @Binding var style: WeatherDetailsViewStyle
-    
     private var selectedCity: City
+    private var style: WeatherDetailsViewStyle
     private var networkManager: any NetworkManagerProtocol
     private var auth: AuthInterface
     private var infoConverter: WeatherInfoToPresentationInfoConverter
     private var addedWaetherInfo = PassthroughSubject<WeatherCurrentInfo, Never>()
+    private var navigationManager: WeatherDetailsNavigationManagerInterface
     private var cancellables: [AnyCancellable] = []
         
     init(selectedCity: City,
-         style: Binding<WeatherDetailsViewStyle>,
+         style: WeatherDetailsViewStyle,
+         navigationManager: WeatherDetailsNavigationManagerInterface,
          networkManager: any NetworkManagerProtocol = NetworkManager(),
          auth: AuthInterface = AuthWrapper(),
          infoConverter: WeatherInfoToPresentationInfoConverter = WeatherInfoToPresentationInfoConverter(),
          currentInfo: WeatherCurrentInfo? = nil,
          addedWaetherInfo: PassthroughSubject<WeatherCurrentInfo, Never> = PassthroughSubject<WeatherCurrentInfo, Never>()){
         self.selectedCity = selectedCity
+        self.style = style
+        self.navigationManager = navigationManager
         self.networkManager = networkManager
         self.auth = auth
         self.infoConverter = infoConverter
         self.currentInfo = currentInfo
         self.addedWaetherInfo = addedWaetherInfo
-        self._style = style
     }
     
-    func addWeatherInfoAsFavorote() {
+    func addFavoriteWeather() {
         guard let currentInfo else { return }
-        addedWaetherInfo.send(currentInfo)
+        navigationManager.addFavorite(weather: currentInfo)
     }
-        
-    func dismiss() {
-        style = .dismissed
+    
+    func deleteButtonAction() {
+        guard let currentInfo else { return }
+        navigationManager.delete(weather: currentInfo.currentWeather)
+        navigationManager.close()
+    }
+    
+    func signedOut() throws {
+        do {
+            try auth.signOut()
+            navigationManager.close()
+        } catch {
+            print("Signing out failed")
+        }
+    }
+    
+    func close() {
+        navigationManager.close()
+    }
+    
+    func presentationStyle() -> WeatherDetailsViewStyle {
+        return style
     }
     
     func fetchWeatherCurrentInfo(unit: WeatherUnit = .celsius) {
@@ -71,7 +92,7 @@ final class WeatherDetailsViewModel: ObservableObject {
         
     }
     
-    func fetchWeatherForecastInfo() {
+    func fetchForecastInfo() {
         let excludes = [OneCallApiExclude.current.rawValue, OneCallApiExclude.minutely.rawValue, OneCallApiExclude.alerts.rawValue]
         let forecastURL = WeatherURLBuilder.URLForForecast(latitude: selectedCity.lat,
                                                            longitude: selectedCity.lon,
@@ -126,10 +147,6 @@ final class WeatherDetailsViewModel: ObservableObject {
                                                                                                                   unit: currentInfo.unit))
         }
         return nil
-    }
-    
-    func signedOut() throws {
-        try auth.signOut()
     }
 
     func weatherIcon(for condition: String) -> String {

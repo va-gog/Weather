@@ -19,7 +19,6 @@ private enum FocusableField: Hashable {
 struct AuthenticationView: View {
   @EnvironmentObject var viewModel: AuthenticationViewModel
   @Environment(\.dismiss) var dismiss
-//    @Binding var type: AuthenticationFlow
 
   @FocusState private var focus: FocusableField?
 

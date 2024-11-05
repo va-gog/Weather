@@ -9,6 +9,7 @@ import FirebaseCore
 import FirebaseAuth
 import GoogleSignIn
 import GoogleSignInSwift
+import SwiftUI
 
 @MainActor
 class AuthenticationViewModel: ObservableObject {
@@ -28,6 +29,8 @@ class AuthenticationViewModel: ObservableObject {
     private var keychain: KeychainManagerInterface
     private var auth: AuthInterface
     
+    @ObservedObject var coordinator = AuthenticationScreenNavigationManager()
+    
     init(auth: AuthInterface, keychain: KeychainManagerInterface = KeychainManager()) {
         self.keychain = keychain
         self.auth = auth
@@ -40,6 +43,11 @@ class AuthenticationViewModel: ObservableObject {
                 : !(email.isEmpty || password.isEmpty || confirmPassword.isEmpty)
             }
             .assign(to: &$isValid)
+        
+        
+        coordinator.$state
+            .receive(on: RunLoop.main)
+            .assign(to: &$authenticationState)
     }
     
     

@@ -10,6 +10,42 @@ import Combine
 import SwiftUI
 @testable import Weather
 
+struct MockAuthenticationScreenNavigationManager: AuthenticationScreenNavigationManagerInterface {
+    var state: AuthenticationState = .unauthenticated
+    
+    func changeState(_ newState: AuthenticationState) { }
+}
+
+struct MockMainScreenNavigationManager: MainScreenNavigationManagerInterface {
+    var navigationAction = PassthroughSubject<MainScreenNavigationAction, Never>()
+    var deletedWeatherSubject = PassthroughSubject<CurrentWeather, Never>()
+    var addedWeatherSubject = PassthroughSubject<WeatherCurrentInfo, Never>()
+    var locationStatueSubject = PassthroughSubject<LocationAuthorizationStatus, Never>()
+    var parent: AuthenticationScreenNavigationManagerInterface = MockAuthenticationScreenNavigationManager()
+
+    func updateLocation(status: LocationAuthorizationStatus) { }
+    
+    func deleteButtonPressed(info: CurrentWeather) { }
+    
+    func addFavoriteWeather(with info: WeatherCurrentInfo) { }
+    
+    func signoutButtonPressed() { }
+    
+    func closeForecastScreen() { }
+}
+
+struct MockWeatherDetailsNavigationManager: WeatherDetailsNavigationManagerInterface {
+    var parent: MainScreenNavigationManagerInterface = MockMainScreenNavigationManager()
+    
+    func delete(weather: CurrentWeather) { }
+    
+    func signout() { }
+    
+    func addFavorite(weather: WeatherCurrentInfo) { }
+    
+    func close() { }
+}
+
 class WeatherDetailsViewModelTests: XCTestCase {
     var viewModel: WeatherDetailsViewModel!
     var mockNetworkManager: MockNetworkManager!
@@ -19,11 +55,11 @@ class WeatherDetailsViewModelTests: XCTestCase {
     override func setUp() {
         super.setUp()
         mockNetworkManager = MockNetworkManager()
-        style = Binding.constant(WeatherDetailsViewStyle.dismissed)
         viewModel = WeatherDetailsViewModel(selectedCity: City(name: "Test",
                                                                lat: 10,
                                                                lon: 10),
-                                            style: Binding.constant(WeatherDetailsViewStyle.dismissed),
+                                            style: WeatherDetailsViewStyle.overlay,
+                                            navigationManager: MockWeatherDetailsNavigationManager(),
                                             networkManager: mockNetworkManager)
         cancellables = []
     }
@@ -110,7 +146,7 @@ class WeatherDetailsViewModelTests: XCTestCase {
                 
             })
             .store(in: &cancellables)
-        viewModel.fetchWeatherForecastInfo()
+        viewModel.fetchForecastInfo()
         
         await fulfillment(of: [expectation], timeout:  1.0)
     }
@@ -135,7 +171,7 @@ class WeatherDetailsViewModelTests: XCTestCase {
             }
             .store(in: &cancellables)
 
-        viewModel.fetchWeatherForecastInfo()
+        viewModel.fetchForecastInfo()
 
         wait(for: [expectation], timeout: 1.0)
     }

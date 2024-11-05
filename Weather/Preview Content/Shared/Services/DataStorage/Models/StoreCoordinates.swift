@@ -1,5 +1,5 @@
 //
-//  StoreCoordinator.swift
+//  StoreCoordinates.swift
 //  Weather
 //
 //  Created by Gohar Vardanyan on 28.10.24.

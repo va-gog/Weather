@@ -25,10 +25,7 @@ final class LocationService: NSObject, CLLocationManagerDelegate, LocationServic
     }
     
     func startTracking() {
-        queue.async {
-            self.manager.startUpdatingLocation()
-        }
-        
+        self.manager.startUpdatingLocation()
     }
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
@@ -42,11 +39,9 @@ final class LocationService: NSObject, CLLocationManagerDelegate, LocationServic
                 return
             }
         }
-        
+        manager.startUpdatingLocation()
         lastLocation = location
-        queue.async {
-            self.latestLocationObject.send(location)
-        }
+        self.latestLocationObject.send(location)
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {

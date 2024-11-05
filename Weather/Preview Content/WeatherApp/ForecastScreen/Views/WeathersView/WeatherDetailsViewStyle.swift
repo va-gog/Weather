@@ -8,6 +8,4 @@
 enum WeatherDetailsViewStyle {
     case overlay
     case overlayAdded
-    case card
-    case dismissed
 }

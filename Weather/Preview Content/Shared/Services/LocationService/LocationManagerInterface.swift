@@ -9,6 +9,7 @@ import CoreLocation
 
 protocol LocationManagerInterface {
     func startUpdatingLocation()
+    func stopUpdatingLocation()
     func requestWhenInUseAuthorization()
     
     var delegate: (any CLLocationManagerDelegate)? { get set }

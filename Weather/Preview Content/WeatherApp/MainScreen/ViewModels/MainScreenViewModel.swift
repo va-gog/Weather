@@ -14,65 +14,96 @@ import FirebaseAuth
 final class MainScreenViewModel: ObservableObject {
     @Published var searchState: SearchState?
     @Published var searchResult: [City] = []
-    @Published var detailedViewStyle = WeatherDetailsViewStyle.dismissed
     @Published var locationStatus: LocationAuthorizationStatus = .notDetermined
-
     @Published var fetchState: FetchState = .none
     @Published var weatherInfo: [WeatherCurrentInfo] = []
-    
-    var addedWaetherInfo = PassthroughSubject<WeatherCurrentInfo, Never>()
+    @Published var selectedCity: City?
     
     private var locationService: LocationServiceInterface
     private var storageManager: DataStorageManagerInterface
     private var networkManager: any NetworkManagerProtocol
     private var auth: AuthInterface
-    private var cancellables: [AnyCancellable] = []
+    private var cancelables: [AnyCancellable] = []
+    
+    var navigationManager: MainScreenNavigationManagerInterface?
+    
+    init(navigationManager: MainScreenNavigationManagerInterface?,
+         locationService: LocationServiceInterface = LocationService(),
+         storageManager: DataStorageManagerInterface = StorageManager(),
+         networkManager: any NetworkManagerProtocol = NetworkManager(),
+         auth: AuthInterface = AuthWrapper()) {
+        self.navigationManager = navigationManager
+        self.locationService = locationService
+        self.storageManager = storageManager
+        self.networkManager = networkManager
+        self.auth = auth
+        
+        locationService.statusSubject
+            .receive(on: RunLoop.main)
+            .sink { [weak self] status in
+                self?.locationStatus = status
+            }
+            .store(in: &cancelables)
+        
+        navigationManager?.deletedWeatherSubject
+            .receive(on: RunLoop.main)
+            .sink(receiveValue: { [weak self] weatherInfo in
+                self?.deleteButtonPressed(info: weatherInfo)
+            })
+            .store(in: &cancelables)
+        
+        navigationManager?.addedWeatherSubject
+            .sink(receiveValue: { [weak self]  weather in
+                guard let self else { return }
+                let info = StoreCoordinates(latitude: weather.currentWeather.coord.lat,
+                                            longitude: weather.currentWeather.coord.lon,
+                                            index: self.weatherInfo.count)
+                let newUserInfo = UserInfo(id: auth.currentUser?.uid ?? "")
+                
+                _ = storageManager.addOrUpdateItem(info: info,
+                                                   type: UserInfo.self, object: newUserInfo)
+                Task { @MainActor in
+                    self.weatherInfo.append(weather)
+                }
+            })
+            .store(in: &cancelables)
+        
+        navigationManager?.locationStatueSubject
+            .receive(on: RunLoop.main)
+            .assign(to: &$locationStatus)
+        
+        navigationManager?.navigationAction
+            .sink(receiveValue: { [weak self] action in
+                switch action {
+                case .forecastScreenClose:
+                    self?.selectedCity = nil
+                default:
+                    break
+                }
+            })
+            .store(in: &cancelables)
+    }
     
     func deleteButtonPressed(info: CurrentWeather) {
         guard let index = weatherInfo.firstIndex(where:  {$0.currentWeather.name == info.name } ) else { return }
         weatherInfo.remove(at: index)
     }
     
-    init(locationService: LocationServiceInterface = LocationService(),
-         storageManager: DataStorageManagerInterface = StorageManager(),
-         networkManager: any NetworkManagerProtocol = NetworkManager(),
-         auth: AuthInterface = AuthWrapper()) {
-        self.locationService = locationService
-        self.storageManager = storageManager
-        self.networkManager = networkManager
-        self.auth = auth
-        
-        addedWaetherInfo
-            .sink { [weak self] value in
-            guard let self else { return }
-            
-                let info = StoreCoordinates(latitude: value.currentWeather.coord.lat,
-                                           longitude: value.currentWeather.coord.lon,
-                                           index: self.weatherInfo.count)
-                let newUserInfo = UserInfo(id: auth.currentUser?.uid ?? "")
-
-                _ = storageManager.addOrUpdateItem(info: info,
-                                               type: UserInfo.self, object: newUserInfo)
-                Task { @MainActor in
-                    self.weatherInfo.append(value)
-                }
-        }
-        .store(in: &cancellables)
-        
-        locationService.statusSubject
-            .receive(on: RunLoop.main)
-            .sink { [weak self] status in
-            self?.locationStatus = status
-        }
-        .store(in: &cancellables)
-
+    func weatherSelected(with info: CurrentWeather) {
+        selectedCity = City(name: info.name,
+                            lat: info.coord.lat,
+                            lon: info.coord.lon)
     }
     
-    func itemSelected(name: String?)  {
-      let exist = weatherInfo.contains(where: {$0.currentWeather.name == name })
-        detailedViewStyle = exist ? .overlayAdded : .overlay
+    func citySelected(_ city: City) {
+        selectedCity = city
     }
-
+    
+    func detailsViewPresentationStyle() -> WeatherDetailsViewStyle  {
+        let exist = weatherInfo.contains(where: { $0.currentWeather.name ==  selectedCity?.name })
+        return exist ? .overlayAdded : .overlay
+    }
+    
     func getCurrentLocationInfo() async throws -> CLLocation {
         try await withCheckedThrowingContinuation { continuation in
             var isResumed = false
@@ -91,7 +122,7 @@ final class MainScreenViewModel: ObservableObject {
                     isResumed = true
                     
                 })
-                .store(in: &cancellables)
+                .store(in: &cancelables)
             locationService.startTracking()
         }
     }
@@ -113,15 +144,15 @@ final class MainScreenViewModel: ObservableObject {
                     self?.searchState = info.isEmpty ? .empty : .success
                 }
             }
-            .store(in: &cancellables)
-
+            .store(in: &cancelables)
+        
     }
     
     func fetchWeatherInfo() async {
         do {
             let coordinates = try await collectCoordinates()
             let firstWeatherTask = Task { try await self.fetchLocationWeatherInfo(coordinate: coordinates.0,
-                                                                                         isMyLocation: true) }
+                                                                                  isMyLocation: true) }
             let allWeatherDataTask = Task { try await fetchAllWeather(for: coordinates.1) }
             let firstWeatherData = try await firstWeatherTask.value
             Task { @MainActor in
@@ -185,7 +216,7 @@ final class MainScreenViewModel: ObservableObject {
             }
             
             var weatherData: [(Int, WeatherCurrentInfo)] = []
-
+            
             for try await (index, weather) in group {
                 weatherData.append((index, weather))
             }
@@ -195,15 +226,15 @@ final class MainScreenViewModel: ObservableObject {
     }
     
     private func fetchLocationWeatherInfo(coordinate: Coordinates,
-                                                 isMyLocation: Bool = false) async throws -> WeatherCurrentInfo {
+                                          isMyLocation: Bool = false) async throws -> WeatherCurrentInfo {
         do {
             let currentURL = WeatherURLBuilder.URLForCurrent(latitude: coordinate.lat,
                                                              longitude: coordinate.lon)
             async let currentWeather = fetchWeatherInfo(urlString: currentURL, type: CurrentWeather.self)
             
             return WeatherCurrentInfo(currentWeather: try await currentWeather,
-                               unit: .celsius,
-                               isMyLocation: isMyLocation)
+                                      unit: .celsius,
+                                      isMyLocation: isMyLocation)
         } catch {
             throw AppError.convertToFetchError(error: error)
         }
@@ -211,7 +242,7 @@ final class MainScreenViewModel: ObservableObject {
     
     private func fetchWeatherInfo<T: Decodable> (urlString: String, type: T.Type) async throws -> T {
         try await withCheckedThrowingContinuation { continuation in
-
+            
             networkManager.fetchAndDecode(from: urlString , as: type)
                 .receive(on: DispatchQueue.main)
                 .sink { completion in
@@ -221,7 +252,7 @@ final class MainScreenViewModel: ObservableObject {
                 } receiveValue: { response in
                     continuation.resume(returning: response)
                 }
-                .store(in: &cancellables)
+                .store(in: &cancelables)
         }
     }
 }

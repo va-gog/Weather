@@ -11,26 +11,24 @@ import SwiftUI
 struct WeatherApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @Environment(\.scenePhase) private var scenePhase
-    @StateObject var mainViewModel = MainScreenViewModel()
-    private var viewModel = WeatherAppViewModel()
+    @StateObject var authenticationViewModel = AuthenticationViewModel(auth: AuthWrapper())
     
-    @ObservedObject var coordinator = AuthenticationScreenCoordinator()
+    private var viewModel = WeatherAppViewModel()
 
     var body: some Scene {
         WindowGroup {
             NavigationView {
-                        switch coordinator.state {
+                switch authenticationViewModel.authenticationState {
                         case .unauthenticated, .authenticating:
                             AuthenticationView()
-                                .environmentObject(coordinator.viewModel)
+                                .environmentObject(authenticationViewModel)
                                 .onAppear() {
-                                    coordinator.viewModel.registerAuthStateHandler()
+                                    authenticationViewModel.registerAuthStateHandler()
                                 }
                         case .authenticated:
                             VStack {
                                 MainView()
-                                    .environmentObject(MainScreemCoordinator(viewModel: mainViewModel,
-                                                                             parent: coordinator))
+                                    .environmentObject(MainScreenViewModel(navigationManager: MainScreenNavigationManager(parent: authenticationViewModel.coordinator)))
                             }
                         }
             }

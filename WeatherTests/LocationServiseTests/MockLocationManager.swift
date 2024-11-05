@@ -22,5 +22,7 @@ class MockLocationManager: LocationManagerInterface {
         started = true
     }
     
+    func stopUpdatingLocation() {}
+    
     func requestWhenInUseAuthorization() {}
 }
