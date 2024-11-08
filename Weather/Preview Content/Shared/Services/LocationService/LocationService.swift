@@ -10,18 +10,20 @@ import Combine
 
 final class LocationService: NSObject, CLLocationManagerDelegate, LocationServiceInterface {
     var latestLocationObject = PassthroughSubject<CLLocation, LocationError>()
-    var statusSubject = PassthroughSubject<LocationAuthorizationStatus, Never>()
+    var statusSubject = CurrentValueSubject<LocationAuthorizationStatus, Never>(LocationAuthorizationStatus.notDetermined)
     
     private var manager: LocationManagerInterface
-    private let queue = DispatchQueue(label: "LocationServiceQueue")
     private var lastLocation: CLLocation?
     
     init(manager: LocationManagerInterface = CLLocationManager()) {
         self.manager = manager
         super.init()
         self.manager.delegate = self
-        self.manager.requestWhenInUseAuthorization()
         self.manager.desiredAccuracy = kCLLocationAccuracyBest
+    }
+    
+    func requestWhenInUseAuthorization() {
+        manager.requestWhenInUseAuthorization()
     }
     
     func startTracking() {
@@ -39,15 +41,13 @@ final class LocationService: NSObject, CLLocationManagerDelegate, LocationServic
                 return
             }
         }
-        manager.startUpdatingLocation()
+        manager.stopUpdatingLocation()
         lastLocation = location
         self.latestLocationObject.send(location)
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        queue.async {
-            self.latestLocationObject.send(completion: .failure(LocationError.noLocationAvailable))
-        }
+        latestLocationObject.send(completion: .failure(LocationError.noLocationAvailable))
     }
     
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {

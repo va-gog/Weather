@@ -6,7 +6,6 @@
 //
 
 enum AuthenticationState {
-  case unauthenticated
   case authenticating
-  case authenticated
+  case none
 }

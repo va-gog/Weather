@@ -25,11 +25,11 @@ class MainScreenViewModelTests: XCTestCase {
         mockNetworkManager = MockNetworkManager()
         mockAuth = MockAuth()
 
-        viewModel = MainScreenViewModel(navigationManager: MockMainScreenNavigationManager(),
-                                        locationService: mockLocationService,
-                                        storageManager: mockStorageManager,
-                                        networkManager: mockNetworkManager,
-                                        auth: mockAuth)
+//        viewModel = MainScreenViewModel(navigationManager: MockMainScreenNavigationManager(),
+//                                        locationService: mockLocationService,
+//                                        storageManager: mockStorageManager,
+//                                        networkManager: mockNetworkManager,
+//                                        auth: mockAuth)
         cancellables = []
     }
 

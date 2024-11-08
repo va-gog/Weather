@@ -5,12 +5,12 @@
 //  Created by Gohar Vardanyan on 25.10.24.
 //
 
-struct APIConfigurationManager {
-    static let baseURLString = "https://api.openweathermap.org/"
-    
-    static var apiKey: String {
-        /*fetch this securely, possibly from environment variables or secure storage
-         This could be configured per environment in a CI/CD setup */
-        "YOUR_API_KEY"
-    }
-}
+//struct APIConfigurationManager {
+//    static let baseURLString = "https://api.openweathermap.org/"
+//    
+//    static var apiKey: String {
+//        /*fetch this securely, possibly from environment variables or secure storage
+//         This could be configured per environment in a CI/CD setup */
+//        "c44d8a4d7dbc0e470912963c69287a76"
+//    }
+//}

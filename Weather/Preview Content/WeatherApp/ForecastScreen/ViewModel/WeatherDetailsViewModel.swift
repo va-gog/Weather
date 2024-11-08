@@ -16,53 +16,50 @@ final class WeatherDetailsViewModel: ObservableObject {
     
     private var selectedCity: City
     private var style: WeatherDetailsViewStyle
-    private var networkManager: any NetworkManagerProtocol
-    private var auth: AuthInterface
-    private var infoConverter: WeatherInfoToPresentationInfoConverter
-    private var addedWaetherInfo = PassthroughSubject<WeatherCurrentInfo, Never>()
-    private var navigationManager: WeatherDetailsNavigationManagerInterface
+    private var coordinator: CoordinatorInterface
+    private var dependencies: ForecastScreenDependenciesInterface
     private var cancellables: [AnyCancellable] = []
-        
+    
     init(selectedCity: City,
          style: WeatherDetailsViewStyle,
-         navigationManager: WeatherDetailsNavigationManagerInterface,
-         networkManager: any NetworkManagerProtocol = NetworkManager(),
-         auth: AuthInterface = AuthWrapper(),
-         infoConverter: WeatherInfoToPresentationInfoConverter = WeatherInfoToPresentationInfoConverter(),
-         currentInfo: WeatherCurrentInfo? = nil,
-         addedWaetherInfo: PassthroughSubject<WeatherCurrentInfo, Never> = PassthroughSubject<WeatherCurrentInfo, Never>()){
+         coordinator: CoordinatorInterface,
+         currentInfo: WeatherCurrentInfo?) {
         self.selectedCity = selectedCity
         self.style = style
-        self.navigationManager = navigationManager
-        self.networkManager = networkManager
-        self.auth = auth
-        self.infoConverter = infoConverter
+        self.coordinator = coordinator
+        self.dependencies = coordinator.dependenciesManager.forecastScreenDependencies()
         self.currentInfo = currentInfo
-        self.addedWaetherInfo = addedWaetherInfo
     }
     
     func addFavoriteWeather() {
         guard let currentInfo else { return }
-        navigationManager.addFavorite(weather: currentInfo)
+        Task { @MainActor in
+            coordinator.popForecastViewWhenAdded(info: currentInfo)
+        }
     }
     
     func deleteButtonAction() {
         guard let currentInfo else { return }
-        navigationManager.delete(weather: currentInfo.currentWeather)
-        navigationManager.close()
+        Task { @MainActor in
+            coordinator.popForecastViewWhenDeleted(info: currentInfo)
+        }
     }
     
     func signedOut() throws {
-        do {
-            try auth.signOut()
-            navigationManager.close()
-        } catch {
-            print("Signing out failed")
+        Task { @MainActor in
+            do {
+                coordinator.pop(.signOut)
+                try dependencies.auth.signOut()
+            } catch {
+                print("Signing out failed")
+            }
         }
     }
     
     func close() {
-        navigationManager.close()
+        Task { @MainActor in
+            coordinator.pop(PopAction.forecastClose)
+        }
     }
     
     func presentationStyle() -> WeatherDetailsViewStyle {
@@ -71,10 +68,9 @@ final class WeatherDetailsViewModel: ObservableObject {
     
     func fetchWeatherCurrentInfo(unit: WeatherUnit = .celsius) {
         if currentInfo == nil {
-            let currentWeatherURL = WeatherURLBuilder.URLForCurrent(latitude: selectedCity.lat,
-                                                                    longitude: selectedCity.lon,
-                                                                    unit: unit)
-            networkManager.fetchAndDecode(from: currentWeatherURL, as: CurrentWeather.self)
+            let request = RequestFactory.currentWeatherRequest(coordinates: Coordinates(lon: selectedCity.lon,
+                                                                                        lat: selectedCity.lat))
+            dependencies.networkService.requestData(request, as: CurrentWeather.self)
                 .receive(on: DispatchQueue.main)
                 .sink { [weak self] completion in
                     if case .failure(let error) = completion {
@@ -93,11 +89,9 @@ final class WeatherDetailsViewModel: ObservableObject {
     }
     
     func fetchForecastInfo() {
-        let excludes = [OneCallApiExclude.current.rawValue, OneCallApiExclude.minutely.rawValue, OneCallApiExclude.alerts.rawValue]
-        let forecastURL = WeatherURLBuilder.URLForForecast(latitude: selectedCity.lat,
-                                                           longitude: selectedCity.lon,
-                                                           exclude: excludes)
-        networkManager.fetchAndDecode(from: forecastURL, as: WeatherForecast.self)
+        let request = RequestFactory.forecastWeatherRequest(coordinates: Coordinates(lon: selectedCity.lon,
+                                                                                     lat: selectedCity.lat))
+        dependencies.networkService.requestData(request, as: WeatherForecast.self)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 if case .failure(let error) = completion {
@@ -108,16 +102,16 @@ final class WeatherDetailsViewModel: ObservableObject {
                 self?.forecastInfo = forecast
             }
             .store(in: &cancellables)
-            
+        
     }
     
     func topViewPresentationInfo(currentInfo: WeatherCurrentInfo?) -> TopViewInfo? {
         if let currentInfo {
-            return TopViewInfo(name: infoConverter.currentLocationTitle(isMyLocation: currentInfo.isMyLocation,
-                                                                        name: currentInfo.currentWeather.name),
+            return TopViewInfo(name: dependencies.infoConverter.currentLocationTitle(isMyLocation: currentInfo.isMyLocation,
+                                                                                     name: currentInfo.currentWeather.name),
                                city: currentInfo.currentWeather.name,
-                               temperature: infoConverter.convertTemperatureToText(temp: currentInfo.currentWeather.main.temp,
-                                                                                   unit: currentInfo.unit),
+                               temperature: dependencies.infoConverter.convertTemperatureToText(temp: currentInfo.currentWeather.main.temp,
+                                                                                                unit: currentInfo.unit),
                                isMyLocation: currentInfo.isMyLocation,
                                icon: weatherIcon(for: currentInfo.currentWeather.weather.first?.main ?? ""))
         }
@@ -128,27 +122,27 @@ final class WeatherDetailsViewModel: ObservableObject {
         if let currentInfo {
             let hourly = forecastInfo.hourly[index]
             return HourlyForecastViewInfo(name: hourly.name,
-                                                      temperature: infoConverter.convertTemperatureToText(temp: hourly.temp,
-                                                                                                          unit: currentInfo.unit),
-                                                      icon: weatherIcon(for: hourly.weather.first?.main ?? ""))
+                                          temperature: dependencies.infoConverter.convertTemperatureToText(temp: hourly.temp,
+                                                                                                           unit: currentInfo.unit),
+                                          icon: weatherIcon(for: hourly.weather.first?.main ?? ""))
         }
         return nil
     }
-
+    
     func dailyViewPresentationInfo(index: Int) -> DailyForecastViewInfo? {
         if let currentInfo {
             let daily = forecastInfo.daily[index]
             return DailyForecastViewInfo(name: daily.name,
                                          icon: weatherIcon(for: daily.weather.first?.main ?? ""),
                                          dailyForecast: daily.weather.first?.main ?? "",
-                                         tempMin: LocalizedText.high + ":" + infoConverter.convertTemperatureToText(temp: daily.temp.min,
-                                                                                                                    unit: currentInfo.unit),
-                                         tempMax:LocalizedText.low + ":" + infoConverter.convertTemperatureToText(temp: daily.temp.max,
-                                                                                                                  unit: currentInfo.unit))
+                                         tempMin: LocalizedText.high + ":" + dependencies.infoConverter.convertTemperatureToText(temp: daily.temp.min,
+                                                                                                                                 unit: currentInfo.unit),
+                                         tempMax:LocalizedText.low + ":" + dependencies.infoConverter.convertTemperatureToText(temp: daily.temp.max,
+                                                                                                                               unit: currentInfo.unit))
         }
         return nil
     }
-
+    
     func weatherIcon(for condition: String) -> String {
         switch condition {
         case "Clear":

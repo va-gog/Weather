@@ -11,27 +11,26 @@ import GoogleSignIn
 import GoogleSignInSwift
 import SwiftUI
 
-@MainActor
 class AuthenticationViewModel: ObservableObject {
     @Published var email = ""
     @Published var password = ""
     @Published var confirmPassword = ""
-    
     @Published var flow: AuthenticationFlow = .login
-    
     @Published var isValid  = false
-    @Published var authenticationState: AuthenticationState = .unauthenticated 
     @Published var errorMessage = ""
     @Published var user: User?
     @Published var displayName: String = ""
+    @State var authenticationState: AuthenticationState = .none
     
+    private var coordinator: Coordinator
     private var authStateHandler: AuthStateDidChangeListenerHandle?
     private var keychain: KeychainManagerInterface
     private var auth: AuthInterface
-    
-    @ObservedObject var coordinator = AuthenticationScreenNavigationManager()
-    
-    init(auth: AuthInterface, keychain: KeychainManagerInterface = KeychainManager()) {
+        
+    init(coordinator: Coordinator,
+         auth: AuthInterface = AuthWrapper(),
+         keychain: KeychainManagerInterface = KeychainManager()) {
+        self.coordinator = coordinator
         self.keychain = keychain
         self.auth = auth
                 
@@ -43,11 +42,6 @@ class AuthenticationViewModel: ObservableObject {
                 : !(email.isEmpty || password.isEmpty || confirmPassword.isEmpty)
             }
             .assign(to: &$isValid)
-        
-        
-        coordinator.$state
-            .receive(on: RunLoop.main)
-            .assign(to: &$authenticationState)
     }
     
     
@@ -71,16 +65,6 @@ class AuthenticationViewModel: ObservableObject {
         password = ""
         confirmPassword = ""
     }
-    
-    func registerAuthStateHandler() {
-        if authStateHandler == nil {
-            authStateHandler = auth.addStateDidChangeListener(completion: { auth, user in
-                guard self.user != user else { return }
-                self.user = user
-                self.authenticationState = user == nil ? .unauthenticated : .authenticated
-            })
-        }
-    }
 }
 
 extension AuthenticationViewModel {
@@ -91,11 +75,9 @@ extension AuthenticationViewModel {
             try? self.keychain.saveItem(data: self.password.data(using: .utf8),
                                         key: self.email,
                                         secClass: kSecClassGenericPassword)
-            
             return true
         }
         catch  {
-            authenticationState = .unauthenticated
             errorMessage = error.localizedDescription
             return false
         }
@@ -107,7 +89,6 @@ extension AuthenticationViewModel {
             return true
         }
         catch {
-            authenticationState = .unauthenticated
             errorMessage = error.localizedDescription
             return false
         }

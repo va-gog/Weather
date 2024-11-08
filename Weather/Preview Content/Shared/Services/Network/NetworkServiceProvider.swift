@@ -1,5 +1,5 @@
 //
-//  NetworkManager.swift
+//  NetworkServiceProvider.swift
 //  Weather
 //
 //  Created by Gohar Vardanyan on 23.10.24.
@@ -8,17 +8,15 @@
 import Foundation
 import Combine
 
-struct NetworkManager: NetworkManagerProtocol {
-    typealias T = Decodable
-    
+struct NetworkServiceProvider: NetworkServiceProtocol {    
     private var sessionManager: URLSessionManagerProtocol
     
     init(sessionManager: URLSessionManagerProtocol = URLSessionManager()) {
         self.sessionManager = sessionManager
     }
     
-    func downloadJSON(from urlString: String) -> AnyPublisher<Data, NetworkError> {
-        guard let url = URL(string: urlString) else {
+    func requestJSON(_ request: NetworkRequest) -> AnyPublisher<Data, NetworkError> {
+        guard let url = URL(string: request.path) else {
             return Fail(error: NetworkError.badURL).eraseToAnyPublisher()
         }
         
@@ -27,8 +25,8 @@ struct NetworkManager: NetworkManagerProtocol {
             .eraseToAnyPublisher()
     }
     
-    func fetchAndDecode<T: Decodable>(from urlString: String, as type: T.Type) -> AnyPublisher<T, NetworkError> {
-        return downloadJSON(from: urlString)
+    func requestData<T: Decodable>(_ request: NetworkRequest, as type: T.Type) -> AnyPublisher<T, NetworkError> {
+        return requestJSON(request)
             .decode(type: T.self, decoder: JSONDecoder())
             .mapError { error in
                 if let decodingError = error as? DecodingError {

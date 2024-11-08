@@ -10,8 +10,9 @@ import CoreLocation
 @testable import Weather
 
 class MockLocationService: LocationServiceInterface {
+    
     var latestLocationObject = PassthroughSubject<CLLocation, LocationError>()
-    var statusSubject = PassthroughSubject<LocationAuthorizationStatus, Never>()
+    var statusSubject = CurrentValueSubject<LocationAuthorizationStatus, Never>(.notDetermined)
 
     var shouldFail = false 
 
@@ -25,4 +26,7 @@ class MockLocationService: LocationServiceInterface {
             }
         }
     }
+    
+    
+    func requestWhenInUseAuthorization() { }
 }

@@ -1,5 +1,5 @@
 //
-//  EmptyView.swift
+//  EmptyResultView.swift
 //  Weather
 //
 //  Created by Gohar Vardanyan on 25.10.24.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct EmptyView: View {
+struct EmptyResultView: View {
     var title: String = ""
     var subtitle: String = ""
     

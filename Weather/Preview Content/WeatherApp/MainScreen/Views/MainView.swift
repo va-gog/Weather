@@ -11,6 +11,7 @@ import MapKit
 import FirebaseAuth
 
 struct MainView: View {
+    private let id = UUID()
     @State private var searchText = ""
     @State private var searchSubject = PassthroughSubject<String, Never>()
     @State private var searchCancellable: AnyCancellable?
@@ -20,11 +21,6 @@ struct MainView: View {
     private var presentationInfo = MainViewPresentationInfo()
     
     var body: some View {
-        if viewModel.locationStatus != .authorized {
-            Spacer()
-            locationPermitionView
-        } else {
-            NavigationView {
                 VStack {
                     SearchView(searchText: $searchText,
                                icon: presentationInfo.searchIcon,
@@ -41,61 +37,41 @@ struct MainView: View {
                     searchResultView
                     Spacer()
                 }
-                .navigationTitle(presentationInfo.navigationTitle)
-                .navigationBarTitleDisplayMode(.inline)
-            }
-            .overlay(
-                Group {
-                    if let selectedCity = viewModel.selectedCity,
-                       let coordinator = viewModel.navigationManager {
-                        let model = WeatherDetailsViewModel(selectedCity: selectedCity,
-                                                            style: viewModel.detailsViewPresentationStyle(),
-                                                            navigationManager: WeatherDetailsNavigationManager(parent: coordinator))
-                        WeatherDetailsView(presentationInfo: WeatherDetailsViewPresentationInfo())
-                            .environmentObject(model)
-                            .transition(.move(edge: .bottom))
-                    }
-                }
-            )
             .onAppear {
                 onApperaAction()
             }
             .onDisappear {
                 searchCancellable?.cancel()
             }
-            Spacer()
-        }
-        
-    }
-    
-    private var locationPermitionView: some View {
-        VStack {
-            Text(LocalizedText.locationAccess)
-                .padding()
-            Button(action: {
-                if let url = URL(string: UIApplication.openSettingsURLString) {
-                    UIApplication.shared.open(url)
-                }
-            }) {
-                Text(LocalizedText.openSettings)
-                    .foregroundColor(.blue)
-                    .padding()
-                    .background(Color(.systemGray5))
-                    .cornerRadius(10)
-            }
-        }
+            Spacer()        
     }
     
     private var searchResultView: some View {
         VStack {
             if searchText.isEmpty {
-                cardList
+                ScrollView {
+                    LazyVStack(spacing: presentationInfo.interitemSapec) {
+                        ForEach(viewModel.weatherInfo) { info in
+                            WeatherCardView(info: viewModel.weatherCardViewPresentationInfo(weatherInfo: info),
+                                            presentationInfo: WeatherCardViewPresentationInfo())
+                            .padding(.horizontal,
+                                     presentationInfo.interitemSapec)
+                            .onTapGesture {
+                                withAnimation {
+                                    viewModel.weatherSelected(with: info)
+                                }
+                            }
+                        }
+                    }
+                    .padding(.vertical, presentationInfo.interitemSapec)
+                    .padding(.horizontal, presentationInfo.interitemSapec)
+                }
             } else {
                 if viewModel.searchState == .searching {
                     LoadingView()
                 } else if viewModel.searchState == .failed || viewModel.searchState == .empty {
                     Spacer()
-                    EmptyView(title: NSLocalizedString(LocalizedText.noResultTitle,
+                    EmptyResultView(title: NSLocalizedString(LocalizedText.noResultTitle,
                                                        comment: ""),
                               subtitle: "\(LocalizedText.noResultSubtitle) '\(searchText)'",
                               presentationInfo: EmptyViewPresentationInfo())
@@ -110,28 +86,6 @@ struct MainView: View {
                             }
                     }
                 }
-            }
-        }
-    }
-    
-    private var cardList: some View {
-        VStack {
-            ScrollView {
-                LazyVStack(spacing: presentationInfo.interitemSapec) {
-                    ForEach(viewModel.weatherInfo) { info in
-                        WeatherCardView(info: viewModel.weatherCardViewPresentationInfo(weatherInfo: info),
-                                        presentationInfo: WeatherCardViewPresentationInfo())
-                        .padding(.horizontal,
-                                 presentationInfo.interitemSapec)
-                        .onTapGesture {
-                            withAnimation {
-                                viewModel.weatherSelected(with: info.currentWeather)
-                            }
-                        }
-                    }
-                }
-                .padding(.vertical, presentationInfo.interitemSapec)
-                .padding(.horizontal, presentationInfo.interitemSapec)
             }
         }
     }

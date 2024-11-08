@@ -15,18 +15,18 @@ final class WeatherAppViewModel {
     static let appRefreshIdentifier = "com.weather.notifications.scheduler"
     
     private var locationService: LocationServiceInterface
-    private var networkManager: any NetworkManagerProtocol
+    private var networkService: any NetworkServiceProtocol
     private var notificationsFactory: UserNotificationsFactoryInterface
     private var backgroundTaskManagery: BackgroundTasksManagerInterface
 
     private var cancellables: [AnyCancellable] = []
     
     init(locationService: LocationServiceInterface = LocationService(),
-         networkManager: any NetworkManagerProtocol = NetworkManager(),
+         networkService: any NetworkServiceProtocol = NetworkServiceProvider(),
          notifications: UserNotificationsFactoryInterface = UserNatificationFactory(),
          backgroundTaskManagery: BackgroundTasksManagerInterface = BackgroundTasksManager()) {
         self.locationService = locationService
-        self.networkManager = networkManager
+        self.networkService = networkService
         self.notificationsFactory = notifications
         self.backgroundTaskManagery = backgroundTaskManagery
     }
@@ -36,10 +36,10 @@ final class WeatherAppViewModel {
         locationService.latestLocationObject.sink { completion in
         } receiveValue: { [weak self] location in
             guard let self else { return }
-           let url = WeatherURLBuilder.URLForCurrent(latitude: location.coordinate.latitude,
-                                            longitude: location.coordinate.longitude,
-                                            unit: .celsius)
-            self.networkManager.fetchAndDecode(from: url,
+
+            let request = RequestFactory.currentWeatherRequest(coordinates: Coordinates(lon: location.coordinate.longitude,
+                                                                                        lat: location.coordinate.longitude))
+            self.networkService.requestData(request,
                                           as: CurrentWeather.self).sink { _ in
                 print("Could't fetch current location to start notifications")
             } receiveValue: { weather in

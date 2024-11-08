@@ -9,15 +9,19 @@ import XCTest
 import Combine
 @testable import Weather
 
+struct MockNetworkRequest: NetworkRequest {
+    var path: String
+}
+
 final class NetworkManagerTests: XCTestCase {
-    var networkManager: NetworkManager!
+    var networkManager: NetworkServiceProvider!
     var mockSessionManager: MockURLSessionManager!
     var cancellables: Set<AnyCancellable>!
 
     override func setUp() {
         super.setUp()
         mockSessionManager = MockURLSessionManager()
-        networkManager = NetworkManager(sessionManager: mockSessionManager)
+        networkManager = NetworkServiceProvider(sessionManager: mockSessionManager)
         cancellables = []
     }
 
@@ -29,11 +33,9 @@ final class NetworkManagerTests: XCTestCase {
     }
 
     func testDownloadJSON_WhenBadUrl() {
-        let urlString = ""
-     
         let expectation = self.expectation(description: "Download JSON Failure")
 
-        networkManager.downloadJSON(from: urlString)
+        networkManager.requestJSON(MockNetworkRequest(path: ""))
             .sink(receiveCompletion: { completion in
                 if case .failure(let error) = completion {
                     XCTAssertEqual(error,NetworkError.badURL)
@@ -48,13 +50,13 @@ final class NetworkManagerTests: XCTestCase {
     }
     
     func testDownloadJSON_WhenUrlSessionFaialed() {
-        let urlString = "https://raw.githubusercontent.com/downapp/sample/main/sample.json"
+        let path = "https://raw.githubusercontent.com/downapp/sample/main/sample.json"
         mockSessionManager.data = nil
         mockSessionManager.error = .requestFailed
         
         let expectation = self.expectation(description: "Download JSON Failure")
 
-        networkManager.downloadJSON(from: urlString)
+        networkManager.requestJSON(MockNetworkRequest(path: path))
             .sink(receiveCompletion: { completion in
                 if case .failure(.unknown(let error)) = completion {
                     XCTAssertEqual(error as! NetworkError, NetworkError.requestFailed)
@@ -68,7 +70,7 @@ final class NetworkManagerTests: XCTestCase {
     }
     
     func testDownloadJSON_Success() {
-        let urlString = "https://raw.githubusercontent.com/downapp/sample/main/sample.json"
+        let path = "https://raw.githubusercontent.com/downapp/sample/main/sample.json"
         let jsonData = """
            {
                "userId": 1,
@@ -82,7 +84,7 @@ final class NetworkManagerTests: XCTestCase {
         
         let expectation = self.expectation(description: "Download JSON")
         
-        networkManager.downloadJSON(from: urlString).sink { completion in
+        networkManager.requestJSON(MockNetworkRequest(path: path)).sink { completion in
             if case .failure(let error) = completion {
                 XCTFail("Error: \(error)")
             }
@@ -104,7 +106,7 @@ final class NetworkManagerTests: XCTestCase {
             let completed: Bool
         }
         
-        let urlString = "https://jsonplaceholder.typicode.com/todos/1"
+        let path = "https://jsonplaceholder.typicode.com/todos/1"
         let jsonData = """
                 {
                     "userId": 1,
@@ -118,7 +120,7 @@ final class NetworkManagerTests: XCTestCase {
         
         let expectation = self.expectation(description: "Fetch and Decode JSON")
         
-        networkManager.fetchAndDecode(from: urlString, as: Todo.self)
+        networkManager.requestData(MockNetworkRequest(path: path), as: Todo.self)
             .sink(receiveCompletion: { completion in
                 if case .failure(let error) = completion {
                     XCTFail("Error: \(error)")
@@ -145,12 +147,12 @@ final class NetworkManagerTests: XCTestCase {
             let completed: Bool
         }
         
-        let urlString = "https://jsonplaceholder.typicode.com/invalid-endpoint"
+        let path = "https://jsonplaceholder.typicode.com/invalid-endpoint"
         mockSessionManager.error = NetworkError.unknown(URLError(.badServerResponse))
         
         let expectation = self.expectation(description: "Fetch and Decode JSON Failure")
         
-        networkManager.fetchAndDecode(from: urlString, as: Todo.self)
+        networkManager.requestData(MockNetworkRequest(path: path), as: Todo.self)
             .sink(receiveCompletion: { completion in
                 if case .failure(_) = completion {
                     expectation.fulfill()

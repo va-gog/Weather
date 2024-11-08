@@ -126,9 +126,7 @@ struct AuthenticationView: View {
     
     private func signAction() {
         Task {            
-            if await viewModel.signAction() {
-                dismiss()
-            }
+            await viewModel.signAction()
         }
     }
 }
