@@ -5,7 +5,6 @@
 //  Created by Gohar Vardanyan on 28.10.24.
 //
 
-
 import RealmSwift
 
 protocol StorageInterface {

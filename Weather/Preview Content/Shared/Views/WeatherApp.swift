@@ -12,15 +12,12 @@ struct WeatherApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @Environment(\.scenePhase) private var scenePhase
     
-    @StateObject private var coordinatorViewModel = AppLaunchViewModel(coordinator: Coordinator())
-    
-    private var viewModel = WeatherAppViewModel()
+    private var viewModel = WeatherAppViewModel(dependencyManager: DependencyManager())
 
     var body: some Scene {
         WindowGroup {
-            AppLaunchView()
-                .environmentObject(coordinatorViewModel)
-                .environmentObject(coordinatorViewModel.coordinator)
+            AppLaunchView(coordinator: viewModel.coordinatorViewModel.coordinator as! Coordinator)
+                .environmentObject(viewModel.coordinatorViewModel)
         }
         .onChange(of: scenePhase) { _, newValue in
             viewModel.setupBackgroundRequest(phase: newValue)

@@ -13,10 +13,12 @@ class MockLocationService: LocationServiceInterface {
     
     var latestLocationObject = PassthroughSubject<CLLocation, LocationError>()
     var statusSubject = CurrentValueSubject<LocationAuthorizationStatus, Never>(.notDetermined)
-
-    var shouldFail = false 
+    var requestWhenInUseAuthorizationCalled = false
+    var shouldFail = false
+    var startedTracking = false
 
     func startTracking() {
+        startedTracking = true
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             if self.shouldFail {
                 self.latestLocationObject.send(completion: .failure(LocationError.noLocationAvailable))
@@ -27,6 +29,14 @@ class MockLocationService: LocationServiceInterface {
         }
     }
     
+    func change(status: LocationAuthorizationStatus) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.statusSubject.send(status)
+        }
+    }
     
-    func requestWhenInUseAuthorization() { }
+    
+    func requestWhenInUseAuthorization() {
+        requestWhenInUseAuthorizationCalled = true
+    }
 }

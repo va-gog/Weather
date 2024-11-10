@@ -6,14 +6,11 @@
 //
 
 enum WeatherUnit: String {
-    case standart
     case celsius = "metric"
     case farenheit = "imperial"
     
     var metric: String {
         return  switch self {
-        case .standart:
-           "K"
         case .celsius:
             "°"
         case .farenheit:

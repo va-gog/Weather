@@ -17,6 +17,13 @@ struct DailyWeather: Decodable, Identifiable {
         case id, dt, temp, weather
     }
     
+    init(name: String, temp: Temperature, weather: [Weather] = [], id: UUID = UUID()) {
+        self.id = id
+        self.name = name
+        self.temp = temp
+        self.weather = weather
+    }
+    
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.id = UUID()

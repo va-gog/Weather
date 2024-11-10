@@ -21,12 +21,12 @@ class AppErrorTests: XCTestCase {
     }
     
     func testConvertToFetchError() {
-        XCTAssertEqual(AppError.convertToFetchError(error: LocationError.noLocationAvailable), AppError.locationFetchFail)
+        XCTAssertEqual(AppError.appError(error: LocationError.noLocationAvailable), AppError.locationFetchFail)
         
         let randomError = NSError(domain: "RandomError", code: 404, userInfo: nil)
-        XCTAssertEqual(AppError.convertToFetchError(error: randomError), AppError.failure(randomError))
+        XCTAssertEqual(AppError.appError(error: randomError), AppError.failure(randomError))
         
-        XCTAssertEqual(AppError.convertToFetchError(error: AppError.weatherFetchFail), AppError.weatherFetchFail)
+        XCTAssertEqual(AppError.appError(error: AppError.weatherFetchFail), AppError.weatherFetchFail)
     }
     
 }

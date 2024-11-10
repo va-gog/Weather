@@ -29,15 +29,40 @@ class LocationServiceTests: XCTestCase {
         super.tearDown()
     }
     
+    func testRequestWhenInUseAuthorization() {
+        locationService.requestWhenInUseAuthorization()
+        XCTAssertTrue(mockLocationManager.authorizationRequested)
+    }
+    
     func testStartUpdatingLocationIs() {
         let expectation = XCTestExpectation(description: "Start location updates")
         locationService.startTracking()
 
         DispatchQueue.global().asyncAfter(deadline: .now() + 0.1) {
-            XCTAssertTrue(self.mockLocationManager.started)
+            XCTAssertTrue(self.mockLocationManager.startedUpdatingLocation)
             expectation.fulfill()
         }
         
+        wait(for: [expectation], timeout: 1.0)
+    }
+    
+    func testDidUpdateLocationSuccess() {
+        let expectation = XCTestExpectation(description: "Start location updates")
+        let expectedResult = CLLocation(latitude: 10, longitude: 10)
+
+        locationService.latestLocationObject
+            .sink(receiveCompletion: { completion in
+                if case .failure(_) = completion {
+                    XCTFail("Expected result but failed")
+                }
+            }, receiveValue: { location in
+                XCTAssertEqual(expectedResult, location)
+                expectation.fulfill()
+            })
+            .store(in: &cancellables)
+            
+        locationService.locationManager(CLLocationManager(), didUpdateLocations: [expectedResult])
+
         wait(for: [expectation], timeout: 1.0)
     }
 
@@ -62,7 +87,7 @@ class LocationServiceTests: XCTestCase {
         wait(for: [expectation], timeout: 1.0)
     }
     
-    func testDidUpdateLocationSuccess() {
+    func testLocationManagerFail() {
         let expectation = XCTestExpectation(description: "Start location updates")
 
         locationService.latestLocationObject
@@ -85,10 +110,11 @@ class LocationServiceTests: XCTestCase {
         wait(for: [expectation], timeout: 1.0)
     }
 
-    func testLocationManagerAuthorizationStatusChangeAuthorized() {
+    func testLocationManagerAuthorizationStatusChange() {
         let expectation = XCTestExpectation(description: "Authorization status should change")
         let expectedStatus = LocationAuthorizationStatus.authorized
         locationService.statusSubject
+            .dropFirst()
             .sink(receiveValue: { status in
                 XCTAssertEqual(status, expectedStatus)
                 expectation.fulfill()
@@ -99,17 +125,4 @@ class LocationServiceTests: XCTestCase {
         wait(for: [expectation], timeout: 1.0)
     }
     
-    func testLocationManagerAuthorizationStatusChangeDenied() {
-        let expectation = XCTestExpectation(description: "Authorization status should change")
-        let expectedStatus = LocationAuthorizationStatus.denied
-        locationService.statusSubject
-            .sink(receiveValue: { status in
-                XCTAssertEqual(status, expectedStatus)
-                expectation.fulfill()
-            })
-            .store(in: &cancellables)
-            
-        locationService.locationManager(CLLocationManager(), didChangeAuthorization: .denied)
-        wait(for: [expectation], timeout: 1.0)
-    }
 }

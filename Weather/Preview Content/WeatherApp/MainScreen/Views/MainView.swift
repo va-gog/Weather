@@ -15,6 +15,7 @@ struct MainView: View {
     @State private var searchText = ""
     @State private var searchSubject = PassthroughSubject<String, Never>()
     @State private var searchCancellable: AnyCancellable?
+    @State private var hasAppearedOnce = false
     
     @EnvironmentObject var viewModel: MainScreenViewModel
     
@@ -99,8 +100,11 @@ struct MainView: View {
                 viewModel.searchWith(query: searchTerm)
             }
         Task {
-            viewModel.requestNotificationPermission()
-            await viewModel.fetchWeatherInfo()
+            if !hasAppearedOnce {
+                viewModel.requestNotificationPermission()
+                await viewModel.fetchWeatherInfo()
+                hasAppearedOnce = true
+            }
         }
     }
     

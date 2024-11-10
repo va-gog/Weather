@@ -1,11 +1,13 @@
 //
-//  MainScreenDependencies.swift
+//  MockMainScreenDependencies.swift
 //  Weather
 //
-//  Created by Gohar Vardanyan on 08.11.24.
+//  Created by Gohar Vardanyan on 11.11.24.
 //
 
-struct MainScreenDependencies: MainScreenDependenciesInterface {
+@testable import Weather
+
+struct MockMainScreenDependencies: MainScreenDependenciesInterface {
     var locationService: LocationServiceInterface
     var storageManager: StorageManagerInterface
     var networkService: NetworkServiceProtocol

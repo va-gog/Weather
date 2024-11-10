@@ -30,8 +30,8 @@ struct WeatherDetailsView: View {
                             ScrollView(.horizontal, showsIndicators: false) {
                                 HStack {
                                     ForEach(viewModel.forecastInfo.hourly.indices, id: \.self) { index in
-                                        if let hourlyViewPresentationInfo = viewModel.hourlyViewPresentationInfo(index: index,
-                                                                                                                 currentInfo: viewModel.currentInfo) {
+                                        if let currentInfo = viewModel.currentInfo,
+                                           let hourlyViewPresentationInfo = viewModel.hourlyViewPresentationInfo(index: index, unit: currentInfo.unit) {
                                             HourlyForecastView(info: hourlyViewPresentationInfo,
                                                                presentationInfo: HourlyForecastViewPresentationInfo())
                                         }
@@ -40,7 +40,9 @@ struct WeatherDetailsView: View {
                             }
                             LazyVStack(alignment: .leading) {
                                 ForEach(viewModel.forecastInfo.daily.indices, id: \.self) { index in
-                                    if let dailyViewInfo = viewModel.dailyViewPresentationInfo(index: index) {
+                                    if let currentInfo = viewModel.currentInfo,
+                                       let dailyViewInfo = viewModel.dailyViewPresentationInfo(index: index,
+                                                                                               unit: currentInfo.unit) {
                                         DailyForecastView(info: dailyViewInfo,
                                                           presentationInfo: DailyForecastViewpresentationInfo())
                                     }
@@ -73,13 +75,12 @@ struct WeatherDetailsView: View {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: {
                     viewModel.close()
-                    
                 }) {
                     Text(LocalizedText.cancel)
                 }
             }
             
-            if viewModel.presentationStyle() != .overlayAdded {
+            if viewModel.style != .overlayAdded {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
                         viewModel.addFavoriteWeather()
@@ -97,7 +98,6 @@ struct WeatherDetailsView: View {
                 case Tab.remove.title:
                     viewModel.deleteButtonAction()
                 case Tab.signOut.title:
-                    viewModel.close()
                     try? viewModel.signedOut()
                 default:
                     assertionFailure("Action for tab item isn't implemented")

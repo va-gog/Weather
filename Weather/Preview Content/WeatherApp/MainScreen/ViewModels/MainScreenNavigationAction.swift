@@ -11,13 +11,14 @@ enum PopAction {
     case signOut
     case delete
     case add
-    case authenticated
+    case authentication
     case mainClose
+    case last
 }
 
 enum AppPages: Hashable {
     case main
-    case login
+    case authentication
     case locationAccess
     case forecast
 }

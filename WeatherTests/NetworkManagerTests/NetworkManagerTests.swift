@@ -52,7 +52,7 @@ final class NetworkManagerTests: XCTestCase {
     func testDownloadJSON_WhenUrlSessionFaialed() {
         let path = "https://raw.githubusercontent.com/downapp/sample/main/sample.json"
         mockSessionManager.data = nil
-        mockSessionManager.error = .requestFailed
+        mockSessionManager.error = NetworkError.requestFailed
         
         let expectation = self.expectation(description: "Download JSON Failure")
 
@@ -128,10 +128,10 @@ final class NetworkManagerTests: XCTestCase {
                 expectation.fulfill()
 
             }, receiveValue: { todo in
-                XCTAssertEqual(todo.id, 1, "Expected todo id to be 1")
-                XCTAssertEqual(todo.userId, 1, "Expected userId to be 1")
-                XCTAssertEqual(todo.title, "delectus aut autem", "Expected title to match")
-                XCTAssertEqual(todo.completed, false, "Expected completed to be false")
+                XCTAssertEqual(todo.id, 1)
+                XCTAssertEqual(todo.userId, 1)
+                XCTAssertEqual(todo.title, "delectus aut autem")
+                XCTAssertFalse(todo.completed)
                 expectation.fulfill()
             })
             .store(in: &cancellables)

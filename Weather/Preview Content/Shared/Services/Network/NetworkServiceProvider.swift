@@ -29,10 +29,7 @@ struct NetworkServiceProvider: NetworkServiceProtocol {
         return requestJSON(request)
             .decode(type: T.self, decoder: JSONDecoder())
             .mapError { error in
-                if let decodingError = error as? DecodingError {
-                    return NetworkError.unknown(decodingError)
-                }
-                return error as? NetworkError ?? NetworkError.unknown(error)
+                NetworkError.networkError(from: error)
             }
             .eraseToAnyPublisher()
     }

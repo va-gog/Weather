@@ -8,5 +8,5 @@
 struct ForecastScreenDependencies: ForecastScreenDependenciesInterface {
     var networkService: NetworkServiceProtocol
     var auth: AuthInterface
-    var infoConverter: WeatherInfoToPresentationInfoConverter
+    var infoConverter: WeatherInfoToPresentationInfoConverterInterface
 }

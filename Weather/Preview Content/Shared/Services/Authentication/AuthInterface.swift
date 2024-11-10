@@ -13,5 +13,6 @@ protocol AuthInterface {
     func createUser(withEmail email: String, password: String) async throws
     func signIn(withEmail email: String, password: String) async throws
     func signOut() throws
-    func addStateDidChangeListener(completion: @escaping (Auth, User?) -> Void) -> NSObjectProtocol
+    func addStateDidChangeListener(completion: @escaping (AuthInterface, UserInterface?) -> Void) -> NSObjectProtocol
 }
+

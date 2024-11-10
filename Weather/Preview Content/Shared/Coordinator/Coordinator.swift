@@ -7,28 +7,29 @@
 
 import SwiftUI
 
-protocol CoordinatorInterface {
-    var dependenciesManager: DependencyManagerInterface { get }
-    
-    func pushForecastView(selectedCity: City, style: WeatherDetailsViewStyle, currentInfo: WeatherCurrentInfo?)
-    func popForecastViewWhenDeleted(info: WeatherCurrentInfo)
-    func popForecastViewWhenAdded(info: WeatherCurrentInfo)
-    func push(page: AppPages)
-    func pop(_ page: PopAction)
-}
-
 final class Coordinator: ObservableObject, @preconcurrency CoordinatorInterface {
     @Published var path: NavigationPath = NavigationPath()
-    var dependenciesManager: DependencyManagerInterface = DependencyManager()
+    var dependenciesManager: DependencyManagerInterface
     
     @Published private var mainScreenViewModel: MainScreenViewModel?
     @Published private var forecastScreenViewModel: WeatherDetailsViewModel?
     
-    init(mainScreenViewModel: MainScreenViewModel? = nil, forecastScreenViewModel: WeatherDetailsViewModel? = nil) {
-        self.mainScreenViewModel = MainScreenViewModel(coordinator: self,
-                                                       dependencyManager: self.dependenciesManager)
+    init(dependenciesManager: DependencyManagerInterface,
+         mainScreenViewModel: MainScreenViewModel? = nil) {
+        self.dependenciesManager = dependenciesManager
+        self.mainScreenViewModel = MainScreenViewModel(coordinator: self)
     }
     
+    @MainActor
+    func push(page: AppPages) {
+        DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
+            DispatchQueue.main.async {
+                self.path.append(page)
+            }
+        }
+    }
+    
+    @MainActor
     func pushForecastView(selectedCity: City, style: WeatherDetailsViewStyle, currentInfo: WeatherCurrentInfo?) {
         forecastScreenViewModel = WeatherDetailsViewModel(selectedCity: selectedCity,
                                                           style: style,
@@ -40,35 +41,15 @@ final class Coordinator: ObservableObject, @preconcurrency CoordinatorInterface 
     }
     
     @MainActor
-    func popForecastViewWhenDeleted(info: WeatherCurrentInfo) {
-        mainScreenViewModel?.deleteButtonPressed(info: info.currentWeather)
-        pop(.delete)
-    }
-    
-    @MainActor
-    func popForecastViewWhenAdded(info: WeatherCurrentInfo) {
-        mainScreenViewModel?.addButtonPressed(info: info)
-        pop(.add)
-    }
-    
-    @MainActor
-    func push(page: AppPages) {
-        DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
-            DispatchQueue.main.async {
-                self.path.append(page)
-            }
-
-        }
-    }
-    
-    @MainActor
     func pop(_ page: PopAction) {
         guard !path.isEmpty else { return }
         switch page {
+        case .last:
+            path.removeLast()
         case .forecastClose:
             forecastScreenViewModel = nil
             path.removeLast()
-        case .authenticated:
+        case .authentication:
             path.removeLast()
         case .signOut:
             pop(.forecastClose)
@@ -77,47 +58,50 @@ final class Coordinator: ObservableObject, @preconcurrency CoordinatorInterface 
             path.removeLast()
         }
     }
+    
+    @MainActor
+    func popForecastViewWhenDeleted(info: WeatherCurrentInfo?) {
+        guard let info else { return }
+        mainScreenViewModel?.deleteButtonPressed(info: info.currentWeather)
+        pop(.delete)
+    }
+    
+    @MainActor
+    func popForecastViewWhenAdded(info: WeatherCurrentInfo?) {
+        guard let info else { return }
+        mainScreenViewModel?.addButtonPressed(info: info)
+        pop(.add)
+    }
         
-    func build(page: AppPages) -> some View {
+    func build(page: AppPages) -> any View {
         switch page {
         case .locationAccess:
-            return AnyView(
-                LocationPermitionView()
-                    .navigationBarBackButtonHidden(true)
-                    .navigationBarHidden(true)
-            )
-            
+            return LocationPermitionView()
+                .navigationBarBackButtonHidden(true)
+                .navigationBarHidden(true)
         case .main:
-                guard let mainScreenViewModel else {
-                    assertionFailure("Main screen should have ViewModel")
-                    return AnyView(EmptyView())
-                }
-            return AnyView(
-                MainView()
-                    .environmentObject(mainScreenViewModel)
-                    .navigationBarBackButtonHidden(true)
-                    .navigationTitle(LocalizedText.weather)
-            )
+            guard let mainScreenViewModel else {
+                assertionFailure("Main screen should have ViewModel")
+                return AnyView(EmptyView())
+            }
+            return MainView()
+                .environmentObject(mainScreenViewModel)
+                .navigationBarBackButtonHidden(true)
+                .navigationTitle(LocalizedText.weather)
             
-        case .login:
-            return AnyView(
-                AuthenticationView()
-                    .environmentObject(AuthenticationViewModel(coordinator: self,
-                                                               auth: AuthWrapper()))
-                    .navigationBarBackButtonHidden(true)
-                    .navigationBarHidden(true)
-            )
+        case .authentication:
+            return  AuthenticationView()
+                .environmentObject(AuthenticationViewModel(coordinator: self))
+                .navigationBarBackButtonHidden(true)
+                .navigationBarHidden(true)
             
         case .forecast:
             guard let forecastScreenViewModel else {
                 assertionFailure("Forecast screen should have ViewModel")
-                return AnyView(EmptyView())
+                return EmptyView()
             }
-            return AnyView(
-                WeatherDetailsView(presentationInfo: WeatherDetailsViewPresentationInfo())
-                                                       .environmentObject(forecastScreenViewModel)
-            )
-            
+            return WeatherDetailsView(presentationInfo: WeatherDetailsViewPresentationInfo())
+                .environmentObject(forecastScreenViewModel)
         }
     }
 }

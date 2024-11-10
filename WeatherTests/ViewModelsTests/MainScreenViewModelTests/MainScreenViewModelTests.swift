@@ -12,35 +12,138 @@ import Combine
 
 class MainScreenViewModelTests: XCTestCase {
     var viewModel: MainScreenViewModel!
+    var mockDependencyManager: MockDependencyManager!
     var mockLocationService: MockLocationService!
+    var mockStorageService: MockDataStorageService!
     var mockStorageManager: MockDataStorageManager!
     var mockNetworkManager: MockNetworkManager!
+    var coordinator: MockCoordinator!
     var mockAuth: MockAuth!
     var cancellables: Set<AnyCancellable>!
 
     override func setUp() {
         super.setUp()
         mockLocationService = MockLocationService()
-        mockStorageManager = MockDataStorageManager()
+        mockStorageService = MockDataStorageService()
+        mockStorageManager = MockDataStorageManager(storageService: mockStorageService)
         mockNetworkManager = MockNetworkManager()
         mockAuth = MockAuth()
+        mockDependencyManager = MockDependencyManager(auth: mockAuth,
+                                                      storageManager: mockStorageManager,
+                                                      networkService: mockNetworkManager,
+                                                      locationService: mockLocationService)
+        coordinator = MockCoordinator(dependenciesManager: mockDependencyManager)
 
-//        viewModel = MainScreenViewModel(navigationManager: MockMainScreenNavigationManager(),
-//                                        locationService: mockLocationService,
-//                                        storageManager: mockStorageManager,
-//                                        networkManager: mockNetworkManager,
-//                                        auth: mockAuth)
+        viewModel = MainScreenViewModel(coordinator: coordinator)
         cancellables = []
     }
 
     override func tearDown() {
         viewModel = nil
+        mockDependencyManager = nil
         mockStorageManager = nil
         mockNetworkManager = nil
         mockLocationService = nil
         cancellables = nil
+        coordinator = nil
+        mockAuth = nil
         super.tearDown()
     }
+    
+    func testWeatherSelected() {
+        let currentWeather = CurrentWeather(id: 123,
+                                            name: "Test",
+                                            weather: [Weather(main: "Main",
+                                                              icon: "")],
+                                            main: Main(temp: 5,
+                                                       tempMin: 2,
+                                                       tempMax: 3),
+                                            coord: Coordinates(lon: 10, lat: 10))
+        let info = WeatherCurrentInfo(currentWeather: currentWeather)
+        viewModel.weatherSelected(with: info)
+        XCTAssertEqual(coordinator.selectedCity?.name, currentWeather.name)
+        XCTAssertEqual(coordinator.selectedCity?.lat, currentWeather.coord.lat)
+        XCTAssertEqual(coordinator.selectedCity?.lon, currentWeather.coord.lon)
+        XCTAssertEqual(coordinator.style, WeatherDetailsViewStyle.overlayAdded)
+    }
+        
+        func testCitySelected() {
+            let name = "SelectedCity"
+            let city = City(name: name, lat: 42.0, lon: 44.0)
+            let currentWeather = CurrentWeather(id: 123,
+                                                name: name,
+                                                weather: [Weather(main: "Main",
+                                                                  icon: "")],
+                                                main: Main(temp: 5,
+                                                           tempMin: 2,
+                                                           tempMax: 3),
+                                                coord: Coordinates(lon: 10, lat: 10))
+            let info = WeatherCurrentInfo(currentWeather: currentWeather)
+            viewModel.citySelected(city)
+            
+            XCTAssertEqual(coordinator.selectedCity?.name, city.name)
+            XCTAssertEqual(coordinator.selectedCity?.lat, city.lat)
+            XCTAssertEqual(coordinator.selectedCity?.lon, city.lon)
+            XCTAssertEqual(coordinator.style, WeatherDetailsViewStyle.overlay)
+            
+            viewModel.weatherInfo = [info]
+            viewModel.citySelected(city)
+            XCTAssertEqual(coordinator.style, WeatherDetailsViewStyle.overlayAdded)
+        }
+        
+        func testDeleteButtonPressed() {
+            let expectation = XCTestExpectation(description: "Successful search")
+            let currentWeather = CurrentWeather(id: 123,
+                                                name: "Test",
+                                                weather: [Weather(main: "Main",
+                                                                  icon: "")],
+                                                main: Main(temp: 5,
+                                                           tempMin: 2,
+                                                           tempMax: 3),
+                                                coord: Coordinates(lon: 10, lat: 10))
+            let info = WeatherCurrentInfo(currentWeather: currentWeather)
+            
+            viewModel.weatherInfo = [info, info]
+            
+            viewModel.$weatherInfo
+                .dropFirst()
+                .sink { info in
+                    XCTAssertEqual(info.count, 1)
+                    expectation.fulfill()
+                }
+                .store(in: &cancellables)
+            
+            viewModel.deleteButtonPressed(info: info.currentWeather)
+            wait(for: [expectation], timeout: 1.0)
+        }
+        
+        func testAddButtonPressed() {
+            let expectation = XCTestExpectation(description: "Successful search")
+            let expectedID = "Test"
+            let currentWeather = CurrentWeather(id: 123,
+                                                name: name,
+                                                weather: [Weather(main: "Main",
+                                                                  icon: "")],
+                                                main: Main(temp: 5,
+                                                           tempMin: 2,
+                                                           tempMax: 3),
+                                                coord: Coordinates(lon: 10, lat: 10))
+            let info = WeatherCurrentInfo(currentWeather: currentWeather)
+            mockAuth.user = MockUser(uid: expectedID)
+            
+            viewModel.$weatherInfo
+                .dropFirst()
+                .sink { info in
+                    XCTAssertEqual(info.count, 1)
+                    XCTAssertEqual(self.mockStorageManager.addedItemID, expectedID)
+
+                    expectation.fulfill()
+                }
+                .store(in: &cancellables)
+            
+            viewModel.addButtonPressed(info: info)
+            wait(for: [expectation], timeout: 1.0)
+        }
     
     func testGetCurrentLocationInfoSuccess() async {
         do {
@@ -73,6 +176,7 @@ class MainScreenViewModelTests: XCTestCase {
             .dropFirst()
             .sink { cities in
                 XCTAssertEqual(cities.count, sampleCities.count)
+                XCTAssertTrue(self.mockNetworkManager.request is GeolocationsRequest)
                 expectation.fulfill()
             }
             .store(in: &cancellables)
@@ -85,7 +189,7 @@ class MainScreenViewModelTests: XCTestCase {
     func testSearchStart() {
         mockNetworkManager.stubbedError = NetworkError.badURL
 
-        let expectation = XCTestExpectation(description: "Failed search")
+        let expectation = XCTestExpectation(description: "Search")
         
         viewModel.$searchState
             .dropFirst()
@@ -151,10 +255,10 @@ class MainScreenViewModelTests: XCTestCase {
                                            coord: Coordinates(lon: 10, lat: 10))
         mockNetworkManager.stubbedResponse = currentWeather
         mockAuth.user = MockUser(uid: id)
-        mockStorageManager.object = UserInfo(id: id)
-        mockStorageManager.info = StoreCoordinates()
+        mockStorageService.object = UserInfo(id: id)
+        mockStorageService.info = StoreCoordinates()
         
-        let expectation = XCTestExpectation(description: "Failed search")
+        let expectation = XCTestExpectation(description: "Succeeded location fetch")
 
         viewModel.$fetchState
             .sink { state in
@@ -163,6 +267,7 @@ class MainScreenViewModelTests: XCTestCase {
                     break
                 case .succeed:
                     XCTAssertEqual(self.viewModel.weatherInfo.count, 1)
+                    XCTAssertTrue(self.mockNetworkManager.request is CurrentWeatherRequest)
                     expectation.fulfill()
                 default:
                     XCTFail("Expected success but failed")
@@ -174,13 +279,46 @@ class MainScreenViewModelTests: XCTestCase {
 
         await viewModel.fetchWeatherInfo()
 
-        await fulfillment(of: [expectation], timeout:  1.0)
+        await fulfillment(of: [expectation], timeout:  2.0)
+    }
+    
+    func testFetchWeatherInfoFromStrageSuccess() async {
+        let id = "User"
+        let currentWeather = CurrentWeather(id: 123,
+                                            name: "Test",
+                                            weather: [Weather(main: "Main",
+                                                              icon: "")],
+                                            main: Main(temp: 5,
+                                                       tempMin: 2,
+                                                       tempMax: 3),
+                                            coord: Coordinates(lon: 10, lat: 10))
+        mockNetworkManager.stubbedResponse = currentWeather
+        mockAuth.user = MockUser(uid: id)
+        mockStorageService.object = UserInfo(id: id)
+        mockStorageService.info = StoreCoordinates()
+        mockStorageManager.coordinates = [Coordinates(lon: 10, lat: 10),
+                                          Coordinates(lon: 10, lat: 10)]
+        
+        let expectation = XCTestExpectation(description: "Succeeded location fetch")
+        
+        viewModel.$weatherInfo
+            .dropFirst(2)
+            .sink { info in
+                XCTAssertEqual(info.count, 3)
+                XCTAssertTrue(self.mockNetworkManager.request is CurrentWeatherRequest)
+                expectation.fulfill()
+                
+            }
+            .store(in: &cancellables)
+        
+        await viewModel.fetchWeatherInfo()
+        await fulfillment(of: [expectation], timeout:  2.0)
     }
     
     func testFetchWeatherInfoLocationFailure() async {
         mockLocationService.shouldFail = true
         
-        let expectation = XCTestExpectation(description: "Failed search")
+        let expectation = XCTestExpectation(description: "Failed location fetch")
         viewModel.$fetchState
             .sink { state in
                 switch state {
@@ -200,10 +338,10 @@ class MainScreenViewModelTests: XCTestCase {
         await fulfillment(of: [expectation], timeout:  1.0)
     }
     
-    func testFetchWeatherInfoWeatherFetchFailure() async {
+    func testFetchWeatherInfoWithFailure() async {
         mockNetworkManager.stubbedError = NetworkError.badURL
         
-        let expectation = XCTestExpectation(description: "Failed search")
+        let expectation = XCTestExpectation(description: "Failed location fetch")
         viewModel.$fetchState
             .sink { state in
                 switch state {
@@ -228,16 +366,16 @@ class MainScreenViewModelTests: XCTestCase {
         let expectedStatus: LocationAuthorizationStatus = .authorized
         
         viewModel.$locationStatus
-            .dropFirst()
+            .dropFirst(2)
             .sink { status in
                 XCTAssertEqual(status, expectedStatus)
                 expectation.fulfill()
             }
             .store(in: &cancellables)
         
-        mockLocationService.statusSubject.send(expectedStatus)
+        mockLocationService.change(status: expectedStatus)
         
-        wait(for: [expectation], timeout: 1.0)
+        wait(for: [expectation], timeout: 2.0)
     }
     
 //    func testWeatherInfoAppendAndStorageUpdate() {
@@ -271,7 +409,7 @@ class MainScreenViewModelTests: XCTestCase {
 //            }
 //            .store(in: &cancellables)
 //        
-////        viewModel.addedWaetherInfo.send(testWeatherInfo)
+//        viewModel.addedWaetherInfo.send(testWeatherInfo)
 //        
 //        wait(for: [expectation], timeout: 5.0)
 //    }

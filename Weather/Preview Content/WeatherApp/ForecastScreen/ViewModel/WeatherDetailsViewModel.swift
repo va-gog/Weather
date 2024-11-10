@@ -15,7 +15,7 @@ final class WeatherDetailsViewModel: ObservableObject {
     @Published var fetchState: FetchState = .none
     
     private var selectedCity: City
-    private var style: WeatherDetailsViewStyle
+    private(set) var style: WeatherDetailsViewStyle
     private var coordinator: CoordinatorInterface
     private var dependencies: ForecastScreenDependenciesInterface
     private var cancellables: [AnyCancellable] = []
@@ -27,32 +27,28 @@ final class WeatherDetailsViewModel: ObservableObject {
         self.selectedCity = selectedCity
         self.style = style
         self.coordinator = coordinator
-        self.dependencies = coordinator.dependenciesManager.forecastScreenDependencies()
+        self.dependencies = coordinator.dependenciesManager.createForecastScreenDependencies()
         self.currentInfo = currentInfo
     }
     
     func addFavoriteWeather() {
-        guard let currentInfo else { return }
         Task { @MainActor in
             coordinator.popForecastViewWhenAdded(info: currentInfo)
         }
     }
     
     func deleteButtonAction() {
-        guard let currentInfo else { return }
         Task { @MainActor in
             coordinator.popForecastViewWhenDeleted(info: currentInfo)
         }
     }
     
     func signedOut() throws {
-        Task { @MainActor in
-            do {
-                coordinator.pop(.signOut)
-                try dependencies.auth.signOut()
-            } catch {
-                print("Signing out failed")
-            }
+        do {
+            coordinator.pop(.signOut)
+            try dependencies.auth.signOut()
+        } catch {
+            throw AppError.signOutFail
         }
     }
     
@@ -60,10 +56,6 @@ final class WeatherDetailsViewModel: ObservableObject {
         Task { @MainActor in
             coordinator.pop(PopAction.forecastClose)
         }
-    }
-    
-    func presentationStyle() -> WeatherDetailsViewStyle {
-        return style
     }
     
     func fetchWeatherCurrentInfo(unit: WeatherUnit = .celsius) {
@@ -74,10 +66,11 @@ final class WeatherDetailsViewModel: ObservableObject {
                 .receive(on: DispatchQueue.main)
                 .sink { [weak self] completion in
                     if case .failure(let error) = completion {
-                        let fetchError = AppError.convertToFetchError(error: error)
+                        let fetchError = AppError.appError(error: error)
                         self?.fetchState = .failed(fetchError)
                     }
                 } receiveValue: { [weak self] current in
+                    self?.fetchState = .succeed
                     self?.currentInfo = WeatherCurrentInfo(currentWeather: current,
                                                            unit: unit,
                                                            isMyLocation: self?.currentInfo?.isMyLocation ?? false)
@@ -95,7 +88,7 @@ final class WeatherDetailsViewModel: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 if case .failure(let error) = completion {
-                    let fetchError = AppError.convertToFetchError(error: error)
+                    let fetchError = AppError.appError(error: error)
                     self?.fetchState = .failed(fetchError)
                 }
             } receiveValue: { [weak self] forecast in
@@ -113,48 +106,33 @@ final class WeatherDetailsViewModel: ObservableObject {
                                temperature: dependencies.infoConverter.convertTemperatureToText(temp: currentInfo.currentWeather.main.temp,
                                                                                                 unit: currentInfo.unit),
                                isMyLocation: currentInfo.isMyLocation,
-                               icon: weatherIcon(for: currentInfo.currentWeather.weather.first?.main ?? ""))
+                               icon: dependencies.infoConverter.weatherIcon(for: currentInfo.currentWeather.weather.first?.main))
         }
         return nil
     }
     
-    func hourlyViewPresentationInfo(index: Int, currentInfo: WeatherCurrentInfo?) -> HourlyForecastViewInfo? {
-        if let currentInfo {
+    func hourlyViewPresentationInfo(index: Int, unit: WeatherUnit) -> HourlyForecastViewInfo? {
+        if forecastInfo.hourly.indices.contains(index) {
             let hourly = forecastInfo.hourly[index]
             return HourlyForecastViewInfo(name: hourly.name,
                                           temperature: dependencies.infoConverter.convertTemperatureToText(temp: hourly.temp,
-                                                                                                           unit: currentInfo.unit),
-                                          icon: weatherIcon(for: hourly.weather.first?.main ?? ""))
+                                                                                                           unit: unit),
+                                          icon: dependencies.infoConverter.weatherIcon(for: hourly.weather.first?.main))
         }
         return nil
     }
     
-    func dailyViewPresentationInfo(index: Int) -> DailyForecastViewInfo? {
-        if let currentInfo {
+    func dailyViewPresentationInfo(index: Int, unit: WeatherUnit) -> DailyForecastViewInfo? {
+        if forecastInfo.daily.indices.contains(index) {
             let daily = forecastInfo.daily[index]
             return DailyForecastViewInfo(name: daily.name,
-                                         icon: weatherIcon(for: daily.weather.first?.main ?? ""),
+                                         icon: dependencies.infoConverter.weatherIcon(for: daily.weather.first?.main),
                                          dailyForecast: daily.weather.first?.main ?? "",
                                          tempMin: LocalizedText.high + ":" + dependencies.infoConverter.convertTemperatureToText(temp: daily.temp.min,
-                                                                                                                                 unit: currentInfo.unit),
+                                                                                                                                 unit: unit),
                                          tempMax:LocalizedText.low + ":" + dependencies.infoConverter.convertTemperatureToText(temp: daily.temp.max,
-                                                                                                                               unit: currentInfo.unit))
+                                                                                                                               unit: unit))
         }
         return nil
-    }
-    
-    func weatherIcon(for condition: String) -> String {
-        switch condition {
-        case "Clear":
-            return AppIcons.clear
-        case "Clouds":
-            return  AppIcons.clouds
-        case "Rain":
-            return  AppIcons.rain
-        case "Snow":
-            return  AppIcons.snow
-        default:
-            return  AppIcons.otherWeather
-        }
     }
 }

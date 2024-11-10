@@ -5,33 +5,39 @@
 //  Created by Gohar Vardanyan on 08.11.24.
 //
 
-protocol DependencyManagerInterface {
-    func mainScreenDependencies() -> MainScreenDependenciesInterface
-    func forecastScreenDependencies() -> ForecastScreenDependenciesInterface
-    func coordinatorScreenDependencies() -> CoordinatorScreenDependenciesInterface
-}
-
 class DependencyManager: DependencyManagerInterface {
     private lazy var locationService: LocationServiceInterface = {
         LocationService()
     }()
     
-    private var storageManager: DataStorageManagerInterface = {
-        StorageManager()
+    private lazy var keychain: KeychainManagerInterface = {
+        KeychainManager()
     }()
     
+    private var storageManager: StorageManagerInterface = {
+        StorageManager(storageService: StorageService())
+    }()
+    
+    private var weatherInfoConverter = WeatherInfoToPresentationInfoConverter()
     private let networkService: NetworkServiceProtocol
     
     private let auth: AuthInterface
+    private let notificationFactory = UserNatificationFactory()
+    private let backgroundTaskManager = BackgroundTasksManager()
+    
     
     init(networkService: any NetworkServiceProtocol = NetworkServiceProvider(),
          auth: AuthInterface = AuthWrapper()) {
         self.networkService = networkService
         self.auth = auth
     }
-
     
-    func mainScreenDependencies() -> MainScreenDependenciesInterface {
+    func createAuthenticationScreenDependencies() -> AuthenticationScreenDependenciesInterface {
+        AuthenticationScreenDependencies(keychain: keychain,
+                                         auth: auth)
+    }
+    
+    func createMainScreenDependencies() -> MainScreenDependenciesInterface {
         MainScreenDependencies(
             locationService: locationService,
             storageManager: storageManager,
@@ -40,16 +46,23 @@ class DependencyManager: DependencyManagerInterface {
         )
     }
     
-    func forecastScreenDependencies() -> ForecastScreenDependenciesInterface {
+    func createForecastScreenDependencies() -> ForecastScreenDependenciesInterface {
         ForecastScreenDependencies(
             networkService: networkService,
             auth: auth,
-            infoConverter: WeatherInfoToPresentationInfoConverter()
+            infoConverter: weatherInfoConverter
         )
     }
     
-    func coordinatorScreenDependencies() -> CoordinatorScreenDependenciesInterface {
-        CoordinatorScreenDependencies(locationService: locationService,
-                                      auth: auth)
+    func createAppLaunchScreenDependencies() -> AppLaunchScreenDependenciesInterface {
+        AppLaunchScreenDependencies(locationService: locationService,
+                                    auth: auth)
+    }
+    
+    func createWeatherAppViewDependencied() -> WeatherAppViewDependenciesInterface {
+        WeatherAppViewDependencies(locationService: locationService,
+                                   networkService: networkService,
+                                   notificationsFactory: notificationFactory,
+                                   backgroundTaskManagery: backgroundTaskManager)
     }
 }

@@ -26,9 +26,10 @@ struct AuthWrapper: AuthInterface  {
        try Auth.auth().signOut()
     }
     
-    func addStateDidChangeListener(completion: @escaping (Auth, User?) -> Void) -> NSObjectProtocol {
+    func addStateDidChangeListener(completion: @escaping (AuthInterface, UserInterface?) -> Void) -> NSObjectProtocol {
         Auth.auth().addStateDidChangeListener { auth, user in
-            completion(auth, user)
+            completion(self, user)
         }
     }
 }
+

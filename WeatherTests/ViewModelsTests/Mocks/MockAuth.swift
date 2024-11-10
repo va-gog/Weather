@@ -10,6 +10,8 @@ import FirebaseAuth
 
 final class MockAuth: AuthInterface {
     var user: MockUser?
+    var signOutError: AppError?
+    var signedOut = false
                     
     var currentUser: UserInterface? {
         user
@@ -27,9 +29,15 @@ final class MockAuth: AuthInterface {
         }
     }
     
-    func signOut() throws {}
+    func signOut() throws {
+        if let signOutError {
+            throw signOutError
+        }
+        signedOut = true
+    }
     
-    func addStateDidChangeListener(completion: @escaping (Auth, User?) -> Void) -> NSObjectProtocol {
+    func addStateDidChangeListener(completion: @escaping (AuthInterface, UserInterface?) -> Void) -> NSObjectProtocol {
+            completion(self, user)
         return NSString(string: "")
     }
 

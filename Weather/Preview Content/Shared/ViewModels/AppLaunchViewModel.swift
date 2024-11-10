@@ -13,40 +13,40 @@ import SwiftUI
 import Combine
 
 final class AppLaunchViewModel: ObservableObject {
-    @ObservedObject var coordinator: Coordinator
-    @Published var path: NavigationPath = NavigationPath()
-    private var dependencies: CoordinatorScreenDependenciesInterface
+    @Published var coordinator: CoordinatorInterface
+    
+    private var dependencies: AppLaunchScreenDependenciesInterface
     private var authStateHandler: AuthStateDidChangeListenerHandle?
     private var cancelable: AnyCancellable?
-    private var isAuthenticated = false
     
-    init(coordinator: Coordinator) {
+    init(coordinator: CoordinatorInterface) {
         self.coordinator = coordinator
-        self.dependencies = coordinator.dependenciesManager.coordinatorScreenDependencies()
-        
+        self.dependencies = coordinator.dependenciesManager.createAppLaunchScreenDependencies()
     }
 
     func registerAuthStateHandler() {
         authStateHandler = dependencies.auth.addStateDidChangeListener(completion: { [weak self] auth, user in
             guard let self else { return }
             if user == nil {
-                self.push(AppPages.login)
+                self.push(AppPages.authentication)
                 self.authStateHandler = nil
             } else {
-
                 switch dependencies.locationService.statusSubject.value {
                 case .notDetermined:
                     cancelable = dependencies.locationService.statusSubject
                         .dropFirst()
                         .sink { [weak self] status in
-                            status == .authorized ? self?.push(AppPages.main) : self?.push(AppPages.locationAccess)
-                            self?.authStateHandler = nil
+                            self?.coordinator.pop(PopAction.last)
+                                status == .authorized ? self?.push(AppPages.main) : self?.push(AppPages.locationAccess)
+                                self?.authStateHandler = nil
                     }
                     dependencies.locationService.requestWhenInUseAuthorization()
                 case .authorized:
+                    coordinator.pop(PopAction.authentication)
                     push(AppPages.main)
                     self.authStateHandler = nil
                 case .denied:
+                    coordinator.pop(PopAction.authentication)
                     push(AppPages.locationAccess)
                     self.authStateHandler = nil
                 }
@@ -55,9 +55,7 @@ final class AppLaunchViewModel: ObservableObject {
     }
     
     private func push(_ page: AppPages) {
-        self.coordinator.pop(PopAction.authenticated)
-        self.coordinator.push(page: page)
-        
+        coordinator.push(page: page)
     }
 
 }

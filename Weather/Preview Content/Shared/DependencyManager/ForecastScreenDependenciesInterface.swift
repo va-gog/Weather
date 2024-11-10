@@ -8,5 +8,5 @@
 protocol ForecastScreenDependenciesInterface {
     var networkService: NetworkServiceProtocol { get }
     var auth: AuthInterface { get }
-    var infoConverter: WeatherInfoToPresentationInfoConverter { get }
+    var infoConverter: WeatherInfoToPresentationInfoConverterInterface { get }
 }

@@ -1,6 +1,6 @@
 
 //
-//  DataStorageManagerInterface.swift
+//  StorageServiceInterface.swift
 //  Weather
 //
 //  Created by Gohar Vardanyan on 25.10.24.
@@ -9,7 +9,7 @@
 import Foundation
 import RealmSwift
 
-protocol DataStorageManagerInterface {
+protocol StorageServiceInterface {
     func fetchItem<T: Object & Storable>(byId id: String, type: T.Type) -> Storable?
-    func addOrUpdateItem(info: StorableInfo, type: Storable.Type, object: Storable) -> Result<Void, Error>
+    func addItem(info: StorableInfo, type: Storable.Type, object: Storable) -> Result<Void, Error>
 }

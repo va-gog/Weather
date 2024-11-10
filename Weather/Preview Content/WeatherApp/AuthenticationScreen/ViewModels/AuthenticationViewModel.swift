@@ -22,18 +22,15 @@ class AuthenticationViewModel: ObservableObject {
     @Published var displayName: String = ""
     @State var authenticationState: AuthenticationState = .none
     
-    private var coordinator: Coordinator
+    private var coordinator: CoordinatorInterface
     private var authStateHandler: AuthStateDidChangeListenerHandle?
-    private var keychain: KeychainManagerInterface
-    private var auth: AuthInterface
-        
-    init(coordinator: Coordinator,
-         auth: AuthInterface = AuthWrapper(),
-         keychain: KeychainManagerInterface = KeychainManager()) {
+    
+    private var dependencies: AuthenticationScreenDependenciesInterface
+    
+    init(coordinator: CoordinatorInterface) {
         self.coordinator = coordinator
-        self.keychain = keychain
-        self.auth = auth
-                
+        self.dependencies = coordinator.dependenciesManager.createAuthenticationScreenDependencies()
+        
         $flow
             .combineLatest($email, $password, $confirmPassword)
             .map { flow, email, password, confirmPassword in
@@ -47,8 +44,8 @@ class AuthenticationViewModel: ObservableObject {
     
     func autofillPassword() {
         do {
-            password = try keychain.retrieveItem(key: email,
-                                                 secClass: kSecClassGenericPassword)
+            password = try dependencies.keychain.retrieveItem(key: email,
+                                                              secClass: kSecClassGenericPassword)
         } catch {
             password = ""
         }
@@ -65,16 +62,24 @@ class AuthenticationViewModel: ObservableObject {
         password = ""
         confirmPassword = ""
     }
-}
-
-extension AuthenticationViewModel {
-    func signInWithEmailPassword() async -> Bool {
+    
+    func signAction() async -> Bool {
+        authenticationState = .authenticating
+        return switch flow {
+        case .login:
+            await signInWithEmailPassword()
+        case .signUp:
+            await signUpWithEmailPassword()
+        }
+    }
+    
+    private func signInWithEmailPassword() async -> Bool {
         do {
-            _ = try await auth.signIn(withEmail: self.email,
-                                      password: self.password)
-            try? self.keychain.saveItem(data: self.password.data(using: .utf8),
-                                        key: self.email,
-                                        secClass: kSecClassGenericPassword)
+            _ = try await dependencies.auth.signIn(withEmail: self.email,
+                                                   password: self.password)
+            try? self.dependencies.keychain.saveItem(data: self.password.data(using: .utf8),
+                                                     key: self.email,
+                                                     secClass: kSecClassGenericPassword)
             return true
         }
         catch  {
@@ -83,27 +88,15 @@ extension AuthenticationViewModel {
         }
     }
     
-    func signUpWithEmailPassword() async -> Bool {
+    private func signUpWithEmailPassword() async -> Bool {
         do  {
-            _ = try await auth.createUser(withEmail: email, password: password)
+            _ = try await dependencies.auth.createUser(withEmail: email, password: password)
             return true
         }
         catch {
             errorMessage = error.localizedDescription
             return false
         }
-    }
-    
-    func signAction() async -> Bool {
-        authenticationState = .authenticating
-        if flow == .login {
-            return await signInWithEmailPassword()
-
-        }
-        if flow == .signUp {
-            return   await signUpWithEmailPassword()
-        }
-        return false
     }
 }
 

@@ -9,18 +9,18 @@ import XCTest
 @testable import Weather
 
 class StorageManagerTests: XCTestCase {
-    var storageManager: StorageManager!
+    var storageService: StorageService!
     var mockStorage: MockStorage!
     
     override func setUp() {
         super.setUp()
         mockStorage = MockStorage()
-        storageManager = StorageManager(storage: mockStorage)
+        storageService = StorageService(storage: mockStorage)
     }
     
     override func tearDown() {
         mockStorage = nil
-        storageManager = nil
+        storageService = nil
         super.tearDown()
     }
     
@@ -30,7 +30,7 @@ class StorageManagerTests: XCTestCase {
         let testId = "uniqueId123"
         let testUser = UserInfo(id: testId)
         
-        let result = storageManager.addOrUpdateItem(info: testInfo,
+        let result = storageService.addItem(info: testInfo,
                                                     type: UserInfo.self,
                                                     object: testUser)
         if case .failure(let error) = result {
@@ -44,7 +44,7 @@ class StorageManagerTests: XCTestCase {
     func testAddNewItemFailure() {
         mockStorage.failure = .add
         
-        let result = storageManager.addOrUpdateItem(info: StoreCoordinates(latitude: 10, longitude: 10, index: 0),
+        let result = storageService.addItem(info: StoreCoordinates(latitude: 10, longitude: 10, index: 0),
                                                     type: UserInfo.self,
                                                     object: UserInfo(id: "uniqueId"))
         switch result {
@@ -61,7 +61,7 @@ class StorageManagerTests: XCTestCase {
         let testUser = UserInfo(id: testId)
         mockStorage.storedObjects.append(testUser)
         
-        let result = storageManager.addOrUpdateItem(info: testInfo,
+        let result = storageService.addItem(info: testInfo,
                                                     type: UserInfo.self,
                                                     object: testUser)
         
@@ -79,7 +79,7 @@ class StorageManagerTests: XCTestCase {
         let testUser = UserInfo(id: testId)
         mockStorage.storedObjects.append(testUser)
         
-        let result = storageManager.addOrUpdateItem(info: testInfo,
+        let result = storageService.addItem(info: testInfo,
                                                     type: UserInfo.self,
                                                     object: testUser)
         
@@ -99,7 +99,7 @@ class StorageManagerTests: XCTestCase {
         mockStorage.storedObjects.append(UserInfo(id: testId2))
 
         
-        let fetchedUser = storageManager.fetchItem(byId: testId2,
+        let fetchedUser = storageService.fetchItem(byId: testId2,
                                                    type: UserInfo.self) as? UserInfo
         
         XCTAssertNotNil(fetchedUser)

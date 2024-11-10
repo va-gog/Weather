@@ -13,6 +13,13 @@ enum NetworkError: Error, Equatable {
     case decodingFailed
     case unknown(Error)
     
+    static func networkError(from error: Error) -> NetworkError {
+        if let decodingError = error as? DecodingError {
+            return NetworkError.unknown(decodingError)
+        }
+        return error as? NetworkError ?? NetworkError.unknown(error)
+    }
+    
     static func ==(lhs: NetworkError, rhs: NetworkError) -> Bool {
            switch (lhs, rhs) {
            case (.badURL, .badURL):

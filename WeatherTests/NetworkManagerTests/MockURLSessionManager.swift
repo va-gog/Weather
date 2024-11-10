@@ -11,7 +11,7 @@ import Combine
 
 final class MockURLSessionManager: URLSessionManagerProtocol {
     var data: Data?
-    var error: NetworkError?
+    var error: Error?
     let subject = CurrentValueSubject<Data, Error>(Data())
 
     func dataTaskPublisher(url: URL) -> AnyPublisher<Data, Error> {

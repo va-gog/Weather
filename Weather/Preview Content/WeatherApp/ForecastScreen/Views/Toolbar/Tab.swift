@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum Tab: Int, TabItem {    
+enum Tab: Int, TabItem {
     case signOut
     case remove
 

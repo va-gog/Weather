@@ -7,7 +7,7 @@
 
 protocol MainScreenDependenciesInterface {
     var locationService: LocationServiceInterface { get }
-    var storageManager: DataStorageManagerInterface { get }
+    var storageManager: StorageManagerInterface { get }
     var networkService: NetworkServiceProtocol { get }
     var auth: AuthInterface { get }
 }

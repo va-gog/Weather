@@ -8,9 +8,10 @@
 enum AppError: Error, Equatable {
     case locationFetchFail
     case weatherFetchFail
+    case signOutFail
     case failure(Error)
     
-    static func convertToFetchError(error: Error) -> AppError {
+    static func appError(error: Error) -> AppError {
         if let fetchError = error as? AppError {
            return fetchError
         }  else if error is LocationError {

@@ -8,30 +8,20 @@
 import RealmSwift
 import Foundation
 
-final class StorageManager: DataStorageManagerInterface {
-    private var storage: StorageInterface
+struct StorageManager: StorageManagerInterface {
+    var storageService: StorageServiceInterface
     
-    init(storage: StorageInterface = RealmWrapper()) {
-        self.storage = storage
+    func fetchStoredCoordinates(by id: String?) -> [Coordinates] {
+        let object = storageService.fetchItem(byId: id ?? "",
+                                              type: UserInfo.self)
+        return (object as? UserInfo)?.fetchStoredCoordinates() ?? []
     }
     
-    func addOrUpdateItem(info: StorableInfo, type: Storable.Type, object: Storable) -> Result<Void, Error> {
-        do {
-            if let userInfo = storage.objects(type).filter( { $0.id == object.id }).first {
-                try storage.write(withoutNotifying: [], {
-                    info.storableObjec(userInfo)
-                })
-            } else {
-                try storage.add(object, block: nil)
-            }
-            return .success(())
-        } catch {
-            print("Failed to write to storage: \(error)")
-            return .failure(error)
-        }
-    }
-    
-    func fetchItem<T: Object & Storable>(byId id: String, type: T.Type) -> Storable? {
-        return storage.objects(type).filter( {$0.id == id }).first
+    func addItem(with id: String?, info: StorableInfo) {
+        let newUserInfo = UserInfo(id: id ?? "")
+        
+        _ = storageService.addItem(info: info,
+                                   type: UserInfo.self,
+                                   object: newUserInfo)
     }
 }

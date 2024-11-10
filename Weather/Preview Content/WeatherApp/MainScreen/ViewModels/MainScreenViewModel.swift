@@ -16,16 +16,19 @@ final class MainScreenViewModel: ObservableObject {
     @Published var searchResult: [City] = []
     @Published var locationStatus: LocationAuthorizationStatus = .notDetermined
     @Published var fetchState: FetchState = .none
-    @Published var weatherInfo: [WeatherCurrentInfo] = []
+    @Published var weatherInfo: [WeatherCurrentInfo] = [] {
+        didSet {
+            print(";jdf")
+        }
+    }
     
     private var coordinator: CoordinatorInterface
     private var dependencies: MainScreenDependenciesInterface
     private var cancelables: [AnyCancellable] = []
     
-    init(coordinator: CoordinatorInterface,
-         dependencyManager: DependencyManagerInterface) {
+    init(coordinator: CoordinatorInterface) {
         self.coordinator = coordinator
-        self.dependencies = dependencyManager.mainScreenDependencies()
+        self.dependencies = coordinator.dependenciesManager.createMainScreenDependencies()
         
         dependencies.locationService.statusSubject
             .receive(on: RunLoop.main)
@@ -52,7 +55,7 @@ final class MainScreenViewModel: ObservableObject {
     }
     
     func deleteButtonPressed(info: CurrentWeather) {
-        guard let index = weatherInfo.firstIndex(where: {$0.currentWeather.name == info.name } ) else { return }
+        guard let index = weatherInfo.firstIndex(where: { $0.currentWeather.name == info.name } ) else { return }
         Task { @MainActor in
             weatherInfo.remove(at: index)
         }
@@ -62,11 +65,8 @@ final class MainScreenViewModel: ObservableObject {
         let coordinates = StoreCoordinates(latitude: info.currentWeather.coord.lat,
                                            longitude: info.currentWeather.coord.lon,
                                            index: weatherInfo.count)
-        let newUserInfo = UserInfo(id: dependencies.auth.currentUser?.uid ?? "")
-        
-        _ = dependencies.storageManager.addOrUpdateItem(info: coordinates,
-                                                        type: UserInfo.self,
-                                                        object: newUserInfo)
+        dependencies.storageManager.addItem(with: dependencies.auth.currentUser?.uid,
+                                            info: coordinates)
         Task { @MainActor in
             self.weatherInfo.append(info)
         }
@@ -79,7 +79,7 @@ final class MainScreenViewModel: ObservableObject {
                 .receive(on: RunLoop.main)
                 .sink(receiveCompletion: {  completion in
                     if case .failure(let error) = completion, !isResumed  {
-                        let fetchError = AppError.convertToFetchError(error: error)
+                        let fetchError = AppError.appError(error: error)
                         continuation.resume(throwing: fetchError)
                     }
                     isResumed = true
@@ -133,7 +133,7 @@ final class MainScreenViewModel: ObservableObject {
             }
         } catch {
             Task { @MainActor in
-                fetchState = .failed(AppError.convertToFetchError(error: error))
+                fetchState = .failed(AppError.appError(error: error))
             }
         }
     }
@@ -163,10 +163,8 @@ final class MainScreenViewModel: ObservableObject {
             let locationInfo = try await getCurrentLocationInfo()
             let currentCoordinate = Coordinates(lon: locationInfo.coordinate.longitude,
                                                 lat: locationInfo.coordinate.latitude)
-            let object = dependencies.storageManager.fetchItem(byId: dependencies.auth.currentUser?.uid ?? "",
-                                                               type: UserInfo.self)
-            let coordinates = (object as? UserInfo)?.fetchStoredCoordinates() ?? []
-            return (currentCoordinate, coordinates)
+            let storedCoordinates = dependencies.storageManager.fetchStoredCoordinates(by: dependencies.auth.currentUser?.uid)
+            return (currentCoordinate, storedCoordinates)
         } catch {
             throw AppError.locationFetchFail
         }
@@ -203,7 +201,7 @@ final class MainScreenViewModel: ObservableObject {
                                       unit: .celsius,
                                       isMyLocation: isMyLocation)
         } catch {
-            throw AppError.convertToFetchError(error: error)
+            throw AppError.appError(error: error)
         }
     }
     

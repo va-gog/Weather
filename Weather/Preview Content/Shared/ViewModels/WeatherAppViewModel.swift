@@ -14,33 +14,26 @@ import CoreLocation
 final class WeatherAppViewModel {
     static let appRefreshIdentifier = "com.weather.notifications.scheduler"
     
-    private var locationService: LocationServiceInterface
-    private var networkService: any NetworkServiceProtocol
-    private var notificationsFactory: UserNotificationsFactoryInterface
-    private var backgroundTaskManagery: BackgroundTasksManagerInterface
+    @ObservedObject var coordinatorViewModel: AppLaunchViewModel
 
+    private var dependencies: WeatherAppViewDependenciesInterface
     private var cancellables: [AnyCancellable] = []
     
-    init(locationService: LocationServiceInterface = LocationService(),
-         networkService: any NetworkServiceProtocol = NetworkServiceProvider(),
-         notifications: UserNotificationsFactoryInterface = UserNatificationFactory(),
-         backgroundTaskManagery: BackgroundTasksManagerInterface = BackgroundTasksManager()) {
-        self.locationService = locationService
-        self.networkService = networkService
-        self.notificationsFactory = notifications
-        self.backgroundTaskManagery = backgroundTaskManagery
+    init(dependencyManager: DependencyManagerInterface) {
+        self.coordinatorViewModel = AppLaunchViewModel(coordinator: Coordinator(dependenciesManager: dependencyManager))
+        self.dependencies = dependencyManager.createWeatherAppViewDependencied()
     }
     
     func startUserNotif() {
-        let locationService = LocationService()
+        let locationService = dependencies.locationService
         locationService.latestLocationObject.sink { completion in
         } receiveValue: { [weak self] location in
             guard let self else { return }
-
+            
             let request = RequestFactory.currentWeatherRequest(coordinates: Coordinates(lon: location.coordinate.longitude,
                                                                                         lat: location.coordinate.longitude))
-            self.networkService.requestData(request,
-                                          as: CurrentWeather.self).sink { _ in
+            self.dependencies.networkService.requestData(request,
+                                                         as: CurrentWeather.self).sink { _ in
                 print("Could't fetch current location to start notifications")
             } receiveValue: { weather in
                 self.scheduleDailyNotification(weather: weather)
@@ -51,16 +44,16 @@ final class WeatherAppViewModel {
         locationService.startTracking()
     }
     
-    func scheduleDailyNotification(weather: CurrentWeather) {
-        notificationsFactory.scheduleDailyNotification(weather: weather)
-    }
-    
     func setupBackgroundRequest(phase: ScenePhase) {
-        backgroundTaskManagery.setupBackgroundRequest(phase: phase,
-                                                      identifier: Self.appRefreshIdentifier)
+        dependencies.backgroundTaskManagery.setupBackgroundRequest(phase: phase,
+                                                                   identifier: Self.appRefreshIdentifier)
     }
     
     func scheduleAppRefreshTask() {
-        backgroundTaskManagery.scheduleAppRefreshTask(identifier: Self.appRefreshIdentifier)
-      }
+        dependencies.backgroundTaskManagery.scheduleAppRefreshTask(identifier: Self.appRefreshIdentifier)
+    }
+    
+    private func scheduleDailyNotification(weather: CurrentWeather) {
+        dependencies.notificationsFactory.scheduleDailyNotification(weather: weather)
+    }
 }
