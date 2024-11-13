@@ -45,7 +45,6 @@ struct WeatherInfoToPresentationInfoConverter: WeatherInfoToPresentationInfoConv
     
     func weatherIcon(for condition: String?) -> String {
         guard let condition, let cond = Conditions(rawValue: condition)?.icon else {
-            assertionFailure("Couldn't find icon for condition")
             return ""
         }
         return cond

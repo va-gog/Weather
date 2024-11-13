@@ -11,4 +11,6 @@ protocol Storable: Object {
    var id: String { get }
     
     func updateObject(storeInfo: StorableInfo)
+    func removeFromObject(storeInfo: StorableInfo)
+    func fetchStoredCoordinates() -> [Coordinates] 
 }

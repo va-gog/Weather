@@ -58,6 +58,12 @@ final class WeatherDetailsViewModel: ObservableObject {
         }
     }
     
+    func bottomToolbarTabs() -> [TabItem] {
+        let deleteDisabled = (currentInfo?.isMyLocation ?? false) || style == .overlay
+        let disabledButtons = deleteDisabled ? [ForecastScreenToolbarTabType.remove] : []
+        return TabItemFactory().createBottomToolbarItems(enabledTypes: disabledButtons)
+    }
+    
     func fetchWeatherCurrentInfo(unit: WeatherUnit = .celsius) {
         if currentInfo == nil {
             let request = RequestFactory.currentWeatherRequest(coordinates: Coordinates(lon: selectedCity.lon,

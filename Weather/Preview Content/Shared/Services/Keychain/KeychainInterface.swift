@@ -6,6 +6,6 @@
 //
 
 protocol KeychainInterface {
-    func saveItem(query: [String: Any]) -> Bool
-    func retrieveItem(query: [String: Any]) -> String?
+    func saveItem(query: [String: Any]) throws 
+    func retrieveItem(query: [String: Any]) throws -> String?
 }

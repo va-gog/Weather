@@ -9,11 +9,12 @@
 import FirebaseAuth
 
 final class MockAuth: AuthInterface {
+    
     var user: MockUser?
     var signOutError: AppError?
     var signedOut = false
                     
-    var currentUser: UserInterface? {
+    var authenticatedUser: UserInterface? {
         user
     }
     

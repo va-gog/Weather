@@ -45,7 +45,7 @@ final class WeatherAppViewModelTests: XCTestCase {
         let expectedWeather = FakeWeatherCurrentInfo.fakeCurrentInfo(name: "Testx")
 
         mockNetworkManager.stubbedResponse = expectedWeather
-        viewModel.startUserNotif()
+        viewModel.startUserNotif(task: MockBGTask())
         
         DispatchQueue.global().asyncAfter(deadline: .now() + 0.2) {
             XCTAssertTrue(self.mockNetworkManager.request is CurrentWeatherRequest)

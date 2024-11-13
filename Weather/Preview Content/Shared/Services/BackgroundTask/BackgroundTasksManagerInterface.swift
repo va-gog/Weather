@@ -5,9 +5,9 @@
 //  Created by Gohar Vardanyan on 30.10.24.
 //
 
-import SwiftUI
+import BackgroundTasks
 
 protocol BackgroundTasksManagerInterface {
-    func scheduleAppRefreshTask(identifier: String)
-    func setupBackgroundRequest(phase: ScenePhase, identifier: String)
+    func setupBackgroundRequest(with identifier: String, completion:  @escaping (BGTaskInterface) -> Void)
+    func submitBackgroundTasks(with identifier: String)
 }

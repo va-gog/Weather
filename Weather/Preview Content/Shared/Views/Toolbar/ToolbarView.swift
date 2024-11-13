@@ -8,66 +8,65 @@
 
 import SwiftUI
 
-struct ToolbarView<T: TabItem>: View {
-    @State private var selectedRect: CGRect = .zero
-    @State private var selectedTab: T?
+struct ToolbarView: View {
+    @State var selectedRect: CGRect = .zero
+
+    private var settings: ToolbarViewSettings
+    private var onTab: (TabItem) -> Void
     
-    private var uiAttributes: BottomBarUIAttributes
-    private var onTab: (T) -> Void
-    
-    init(selectedTab: T?, attributes: BottomBarUIAttributes = BottomBarUIAttributes(), onTab: @escaping (T) -> Void) {
-        self.selectedTab = selectedTab
-        self.uiAttributes = attributes
+    init(settings: ToolbarViewSettings, onTab: @escaping (TabItem) -> Void) {
+        self.settings = settings
         self.onTab = onTab
     }
     
     var body: some View {
-        HStack(spacing: uiAttributes.interTabSpace) {
+        HStack(spacing: settings.uiAttributes.interTabSpace) {
             Spacer()
-            ForEach(T.allCases, id: \.self) { tab in
+            ForEach(settings.tabItems, id: \.title) { tab in
                 tabButton(for: tab)
             }
             Spacer()
         }
-        .padding(.top, uiAttributes.containerTopPadding)
-        .background(uiAttributes.toolbarBackground)
+        .padding(.top, settings.uiAttributes.containerTopPadding)
+        .background(settings.uiAttributes.toolbarBackground)
         .overlay(
             selectedTabIndicator,
             alignment: .bottomLeading
         )
     }
     
-    private func tabButton(for tab: T) -> some View {
+    private func tabButton(for tab: TabItem) -> some View {
         Button(action: {
             withAnimation {
-                selectedTab = tab
+                settings.selectedTab = tab
             }
             onTab(tab)
         }) {
             VStack {
                 Image(systemName: tab.icon)
                     .resizable()
-                    .frame(width: uiAttributes.iconSize.width,
-                           height: uiAttributes.iconSize.height)
+                    .frame(width: settings.uiAttributes.iconSize.width,
+                           height: settings.uiAttributes.iconSize.height)
                 Text(tab.title)
-                    .font(uiAttributes.textFont)
-                    .padding(.top, uiAttributes.textPadding.top)
+                    .font(settings.uiAttributes.textFont)
+                    .padding(.top, settings.uiAttributes.textPadding.top)
             }
-            .padding(.top, uiAttributes.tabTopPadding)
-            .foregroundColor(selectedTab == tab ? uiAttributes.selectedForgroundColor : uiAttributes.deselectedForgroundColor)
+            .padding(.top, settings.uiAttributes.tabTopPadding)
+            .foregroundColor(settings.selectedTab?.title == tab.title ? settings.uiAttributes.selectedForgroundColor : settings.uiAttributes.deselectedForgroundColor)
             .background(GeometryReader { geometry in
                 Color.clear
                     .onAppear { updateSelectedRect(for: tab,
                                                    with: geometry) }
-                    .onChange(of: selectedTab) { oldValue, newValue in
+                    .onChange(of: settings.selectedTab?.title) { oldValue, newValue in
                         updateSelectedRect(for: tab,
                                            with: geometry)
                     }
                     .onChange(of: UIDevice.current.orientation) { _, _ in
-                               updateSelectedRect(for: selectedTab, with: geometry)
+                        updateSelectedRect(for: settings.selectedTab, with: geometry)
                            }
             })
         }
+        .disabled(tab.isHidden)
         .buttonStyle(PlainButtonStyle())
     }
     
@@ -75,17 +74,17 @@ struct ToolbarView<T: TabItem>: View {
         GeometryReader { geometry in
             Rectangle()
                 .frame(width: selectedRect.width,
-                       height: uiAttributes.indicatorHeight)
-                .foregroundColor(uiAttributes.indicatorColor)
+                       height: settings.uiAttributes.indicatorHeight)
+                .foregroundColor(settings.uiAttributes.indicatorColor)
                 .position(x: selectedRect.midX - geometry.frame(in: .global).minX,
                           y: 0)
-                .animation(.easeInOut(duration: uiAttributes.indicatorMoveAnimDur),
+                .animation(.easeInOut(duration: settings.uiAttributes.indicatorMoveAnimDur),
                            value: selectedRect)
         }
     }
     
-    private func updateSelectedRect(for tab: T?, with geometry: GeometryProxy) {
-        if selectedTab == tab {
+    private func updateSelectedRect(for tab: TabItem?, with geometry: GeometryProxy) {
+        if settings.selectedTab?.title == tab?.title {
             selectedRect = geometry.frame(in: .global)
         }
     }

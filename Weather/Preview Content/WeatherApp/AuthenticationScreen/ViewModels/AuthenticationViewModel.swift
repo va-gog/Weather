@@ -20,7 +20,7 @@ class AuthenticationViewModel: ObservableObject {
     @Published var errorMessage = ""
     @Published var user: User?
     @Published var displayName: String = ""
-    @State var authenticationState: AuthenticationState = .none
+    @Published var authenticationState: AuthenticationState = .none
     
     private var coordinator: CoordinatorInterface
     private var authStateHandler: AuthStateDidChangeListenerHandle?
@@ -64,7 +64,9 @@ class AuthenticationViewModel: ObservableObject {
     }
     
     func signAction() async -> Bool {
-        authenticationState = .authenticating
+        Task { @MainActor in
+            authenticationState = .authenticating
+        }
         return switch flow {
         case .login:
             await signInWithEmailPassword()

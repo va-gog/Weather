@@ -8,6 +8,7 @@
 @testable import Weather
 
 final class MockCoordinator: CoordinatorInterface {
+    
     var dependenciesManager: DependencyManagerInterface
     var selectedCity: City?
     var style: WeatherDetailsViewStyle?
@@ -25,6 +26,10 @@ final class MockCoordinator: CoordinatorInterface {
         self.selectedCity = selectedCity
         self.style = style
         self.currentInfo = currentInfo
+    }
+    
+    func pushMainScreen() {
+        pushedPage = .main
     }
     
     func popForecastViewWhenDeleted(info: WeatherCurrentInfo?) {

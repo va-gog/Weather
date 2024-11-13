@@ -7,7 +7,9 @@
 
 import Foundation
 
-protocol TabItem: CaseIterable, Hashable where AllCases: RandomAccessCollection {
+protocol TabItem {
     var title: String { get }
     var icon: String { get }
+    var isHidden: Bool { get }
 }
+

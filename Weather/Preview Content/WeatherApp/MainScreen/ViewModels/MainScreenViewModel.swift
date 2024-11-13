@@ -16,11 +16,7 @@ final class MainScreenViewModel: ObservableObject {
     @Published var searchResult: [City] = []
     @Published var locationStatus: LocationAuthorizationStatus = .notDetermined
     @Published var fetchState: FetchState = .none
-    @Published var weatherInfo: [WeatherCurrentInfo] = [] {
-        didSet {
-            print(";jdf")
-        }
-    }
+    @Published var weatherInfo: [WeatherCurrentInfo] = []
     
     private var coordinator: CoordinatorInterface
     private var dependencies: MainScreenDependenciesInterface
@@ -56,6 +52,11 @@ final class MainScreenViewModel: ObservableObject {
     
     func deleteButtonPressed(info: CurrentWeather) {
         guard let index = weatherInfo.firstIndex(where: { $0.currentWeather.name == info.name } ) else { return }
+        let coordinates = StoreCoordinates(latitude: info.coord.lat,
+                                           longitude: info.coord.lon,
+                                           index: index - 1)
+        dependencies.storageManager.removeObject(with: dependencies.auth.authenticatedUser?.uid,
+                                                 info: coordinates)
         Task { @MainActor in
             weatherInfo.remove(at: index)
         }
@@ -65,7 +66,7 @@ final class MainScreenViewModel: ObservableObject {
         let coordinates = StoreCoordinates(latitude: info.currentWeather.coord.lat,
                                            longitude: info.currentWeather.coord.lon,
                                            index: weatherInfo.count)
-        dependencies.storageManager.addItem(with: dependencies.auth.currentUser?.uid,
+        dependencies.storageManager.addItem(with: dependencies.auth.authenticatedUser?.uid,
                                             info: coordinates)
         Task { @MainActor in
             self.weatherInfo.append(info)
@@ -163,7 +164,7 @@ final class MainScreenViewModel: ObservableObject {
             let locationInfo = try await getCurrentLocationInfo()
             let currentCoordinate = Coordinates(lon: locationInfo.coordinate.longitude,
                                                 lat: locationInfo.coordinate.latitude)
-            let storedCoordinates = dependencies.storageManager.fetchStoredCoordinates(by: dependencies.auth.currentUser?.uid)
+            let storedCoordinates = dependencies.storageManager.fetchStoredCoordinates(by: dependencies.auth.authenticatedUser?.uid)
             return (currentCoordinate, storedCoordinates)
         } catch {
             throw AppError.locationFetchFail

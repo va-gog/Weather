@@ -12,4 +12,5 @@ protocol StorageManagerInterface {
     
     func fetchStoredCoordinates(by id: String?) -> [Coordinates]
     func addItem(with id: String?, info: StorableInfo)
+    func removeObject(with id: String?, info: StorableInfo)
 }

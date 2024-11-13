@@ -24,6 +24,11 @@ class UserInfo: Object, Storable {
         guard let storeInfo = storeInfo as? StoreCoordinates else { return }
         coordinates.append(storeInfo)
     }
+    
+    func removeFromObject(storeInfo: StorableInfo) {
+        guard let storeInfo = storeInfo as? StoreCoordinates else { return }
+        coordinates.remove(at: storeInfo.index)
+    }
 
     func fetchStoredCoordinates() -> [Coordinates] {
         coordinates.map { Coordinates(lon: $0.longitude, lat: $0.latitude) }

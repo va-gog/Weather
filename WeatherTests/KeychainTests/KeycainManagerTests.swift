@@ -45,13 +45,13 @@ class KeychainManagerTests: XCTestCase {
     func testSaveItemAddFailure() {
         let testKey = "testKey"
         let testData = "testValue".data(using: .utf8)
-        mockKeychain.saveSucceed = false
+        mockKeychain.error = KeychainError.invalidData
         
         XCTAssertThrowsError(try keychainManager.saveItem(data: testData,
                                                           key: testKey,
                                                           secClass: kSecClassGenericPassword)) { error in
             XCTAssertTrue(error is KeychainError)
-            XCTAssertEqual(error as? KeychainError, KeychainError.itemAddFail)
+            XCTAssertEqual(error as? KeychainError, KeychainError.invalidData)
         }
     }
     
@@ -62,7 +62,7 @@ class KeychainManagerTests: XCTestCase {
                                                           key: testKey,
                                                           secClass: kSecClassGenericPassword)) { error in
             XCTAssertTrue(error is KeychainError)
-            XCTAssertEqual(error as? KeychainError, KeychainError.emptyData)
+            XCTAssertEqual(error as? KeychainError, KeychainError.invalidData)
         }
     }
     
@@ -85,7 +85,7 @@ class KeychainManagerTests: XCTestCase {
         XCTAssertThrowsError(try keychainManager.retrieveItem(key: testKey,
                                                               secClass: kSecClassGenericPassword)) { error in
             XCTAssertTrue(error is KeychainError)
-            XCTAssertEqual(error as? KeychainError, KeychainError.itemRetrieveFail)
+            XCTAssertEqual(error as? KeychainError, KeychainError.itemNotFound)
         }
     }
 }

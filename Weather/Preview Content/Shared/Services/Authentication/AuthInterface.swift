@@ -8,11 +8,10 @@
 import FirebaseAuth
 
 protocol AuthInterface {
-    var currentUser: UserInterface? { get }
+    var authenticatedUser: UserInterface? { get }
     
     func createUser(withEmail email: String, password: String) async throws
     func signIn(withEmail email: String, password: String) async throws
     func signOut() throws
     func addStateDidChangeListener(completion: @escaping (AuthInterface, UserInterface?) -> Void) -> NSObjectProtocol
 }
-

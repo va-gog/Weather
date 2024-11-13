@@ -39,7 +39,7 @@ struct MockDependencyManager: DependencyManagerInterface {
                                        infoConverter: weatherInfoConverter ?? MockWeatherInfoToPresentationInfoConverter())
     }
     
-    func createWeatherAppViewDependencied() -> WeatherAppViewDependenciesInterface {
+    func createWeatherAppViewDependencies() -> WeatherAppViewDependenciesInterface {
         MockWeatherAppViewDependencies(locationService: locationService ?? LocationService(),
                                        networkService: networkService ?? NetworkServiceProvider(),
                                        notificationsFactory: notificationFactory ?? MockUserNotificationsFactory(),

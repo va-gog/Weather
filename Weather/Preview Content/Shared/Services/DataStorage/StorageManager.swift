@@ -24,4 +24,12 @@ struct StorageManager: StorageManagerInterface {
                                    type: UserInfo.self,
                                    object: newUserInfo)
     }
+    
+    func removeObject(with id: String?, info: StorableInfo) {
+        let newUserInfo = UserInfo(id: id ?? "")
+
+        try? storageService.removeItem(info: info,
+                                       type: UserInfo.self,
+                                       object: newUserInfo)
+    }
 }

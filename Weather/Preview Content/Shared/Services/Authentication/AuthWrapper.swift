@@ -10,7 +10,7 @@ import FirebaseAuth
 
 struct AuthWrapper: AuthInterface  {
     
-    var currentUser: UserInterface? {
+    var authenticatedUser: UserInterface? {
         Auth.auth().currentUser
     }
     
@@ -26,10 +26,8 @@ struct AuthWrapper: AuthInterface  {
        try Auth.auth().signOut()
     }
     
-    func addStateDidChangeListener(completion: @escaping (AuthInterface, UserInterface?) -> Void) -> NSObjectProtocol {
-        Auth.auth().addStateDidChangeListener { auth, user in
+    func addStateDidChangeListener(completion: @escaping (AuthInterface, UserInterface?) -> Void) -> NSObjectProtocol {        Auth.auth().addStateDidChangeListener { auth, user in
             completion(self, user)
         }
     }
 }
-

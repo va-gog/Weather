@@ -21,7 +21,7 @@ final class MockKeychainManager: KeychainManagerInterface {
     
     func retrieveItem(key: String, secClass: CFString) throws -> String {
         guard let password else {
-            throw KeychainError.emptyData
+            throw KeychainError.itemNotFound
         }
         
         return password

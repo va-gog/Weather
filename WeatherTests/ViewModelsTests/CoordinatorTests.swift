@@ -11,9 +11,10 @@ import XCTest
 final class CoordinatorTests: XCTestCase {
     var coordinator: Coordinator!
 
+    @MainActor
     override func setUp() {
         super.setUp()
-        coordinator = Coordinator(dependenciesManager: MockDependencyManager())
+            coordinator = Coordinator(dependenciesManager: MockDependencyManager())
     }
 
     override func tearDown() {
@@ -24,9 +25,9 @@ final class CoordinatorTests: XCTestCase {
     @MainActor
     func testPushPage() {
         let expectation = self.expectation(description: "Push page")
-        coordinator.push(page: .main)
+        coordinator.pushMainScreen()
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.1) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.3) {
             XCTAssertEqual(self.coordinator.path.count, 1)
             expectation.fulfill()
         }

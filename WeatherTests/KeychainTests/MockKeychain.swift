@@ -9,15 +9,14 @@ import Foundation
 @testable import Weather
 
 class MockKeychain: KeychainInterface {
+    
     var storage: [String: Any]?
-    var saveSucceed = true
+    var error: KeychainError?
     var retrieveSucceed = true
     
-    func saveItem(query: [String: Any]) -> Bool {
-        if !saveSucceed { return false}
+    func saveItem(query: [String : Any]) throws {
+        if let error { throw error }
         storage = query
-        
-        return true
     }
     
     func retrieveItem(query: [String: Any]) -> String? {

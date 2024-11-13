@@ -94,7 +94,7 @@ class AppLaunchViewModelTests: XCTestCase {
         viewModel.registerAuthStateHandler()
         locationServiceMock.statusSubject.send(.authorized)
         
-        DispatchQueue.global().asyncAfter(deadline: .now() + 0.1) {
+        DispatchQueue.global().asyncAfter(deadline: .now() + 0.2) {
             XCTAssertEqual(self.coordinatorMock.popAction, PopAction.last)
             XCTAssertEqual(self.coordinatorMock.pushedPage, AppPages.main)
             XCTAssertTrue(self.locationServiceMock.requestWhenInUseAuthorizationCalled)

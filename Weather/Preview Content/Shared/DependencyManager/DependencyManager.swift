@@ -14,23 +14,29 @@ class DependencyManager: DependencyManagerInterface {
         KeychainManager()
     }()
     
-    private var storageManager: StorageManagerInterface = {
+    private lazy var storageManager: StorageManagerInterface = {
         StorageManager(storageService: StorageService())
     }()
+
+    private lazy var weatherInfoConverter: WeatherInfoToPresentationInfoConverter = {
+        WeatherInfoToPresentationInfoConverter()
+    }()
+
+    private lazy var notificationFactory: UserNotificationFactory = {
+        UserNotificationFactory()
+    }()
+
+    private lazy var backgroundTaskManager: BackgroundTasksManager = {
+        BackgroundTasksManager()
+    }()
     
-    private var weatherInfoConverter = WeatherInfoToPresentationInfoConverter()
-    private let networkService: NetworkServiceProtocol
+    private lazy var networkService: any NetworkServiceProtocol = {
+        NetworkServiceProvider()
+    }()
     
-    private let auth: AuthInterface
-    private let notificationFactory = UserNatificationFactory()
-    private let backgroundTaskManager = BackgroundTasksManager()
-    
-    
-    init(networkService: any NetworkServiceProtocol = NetworkServiceProvider(),
-         auth: AuthInterface = AuthWrapper()) {
-        self.networkService = networkService
-        self.auth = auth
-    }
+    private lazy var auth: any AuthInterface = {
+        AuthWrapper()
+    }()
     
     func createAuthenticationScreenDependencies() -> AuthenticationScreenDependenciesInterface {
         AuthenticationScreenDependencies(keychain: keychain,
@@ -59,7 +65,7 @@ class DependencyManager: DependencyManagerInterface {
                                     auth: auth)
     }
     
-    func createWeatherAppViewDependencied() -> WeatherAppViewDependenciesInterface {
+    func createWeatherAppViewDependencies() -> WeatherAppViewDependenciesInterface {
         WeatherAppViewDependencies(locationService: locationService,
                                    networkService: networkService,
                                    notificationsFactory: notificationFactory,

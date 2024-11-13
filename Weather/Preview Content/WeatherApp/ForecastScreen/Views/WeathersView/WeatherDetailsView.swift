@@ -93,15 +93,15 @@ struct WeatherDetailsView: View {
     }
 
     private var tabView: some View {
-            ToolbarView<Tab>(selectedTab: nil, onTab: { tab in
-                switch tab.title {
-                case Tab.remove.title:
-                    viewModel.deleteButtonAction()
-                case Tab.signOut.title:
-                    try? viewModel.signedOut()
-                default:
-                    assertionFailure("Action for tab item isn't implemented")
-                }
-            })
+        return ToolbarView(settings: ToolbarViewSettings(tabItems: viewModel.bottomToolbarTabs())) { tab in
+            switch tab.title {
+            case ForecastScreenToolbarTabType.remove.title:
+                viewModel.deleteButtonAction()
+            case ForecastScreenToolbarTabType.signOut.title:
+                try? viewModel.signedOut()
+            default:
+                assertionFailure("Action for tab item isn't implemented")
+            }
+        }
     }
 }

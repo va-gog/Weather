@@ -7,64 +7,176 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "A02DAF4B-197A-48C1-9244-6C6AF9CF239C"
+            uuid = "BF615EED-83C3-48C3-92D1-F1A27CA0CF66"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Weather/Preview Content/WeatherApp/MainScreen/ViewModels/MainScreenViewModel.swift"
+            filePath = "Weather/Preview Content/Shared/Services/BackgroundTask/BackgroundTasksManager.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "65"
-            endingLineNumber = "65"
-            landmarkName = "addButtonPressed(info:)"
+            startingLineNumber = "16"
+            endingLineNumber = "16"
+            landmarkName = "setupBackgroundRequest(with:completion:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "F8AAAE34-485F-4807-9EFE-70D66B48E4DE"
+            uuid = "6F8B78A0-585B-4313-9E3B-8A58C916CCE8"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Weather/Preview Content/WeatherApp/MainScreen/ViewModels/MainScreenViewModel.swift"
+            filePath = "Weather/Preview Content/Shared/Services/BackgroundTask/BackgroundTasksManager.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "71"
-            endingLineNumber = "71"
-            landmarkName = "addButtonPressed(info:)"
+            startingLineNumber = "30"
+            endingLineNumber = "30"
+            landmarkName = "submitBackgroundTasks(with:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "E351F882-1530-4C36-923D-47022805084A"
+            uuid = "C59A666F-0CFA-4399-AF92-6FBD4CF8A637"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Weather/Preview Content/WeatherApp/MainScreen/ViewModels/MainScreenViewModel.swift"
+            filePath = "Weather/Preview Content/Shared/Services/BackgroundTask/BackgroundTasksManager.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "21"
-            endingLineNumber = "21"
-            landmarkName = "weatherInfo"
-            landmarkType = "24">
+            startingLineNumber = "32"
+            endingLineNumber = "32"
+            landmarkName = "submitBackgroundTasks(with:)"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "808FA7EE-6B79-4D28-A9C7-B8A4A79D8A34"
+            uuid = "B73E4B5D-68E8-47D4-B66A-D0800A902927"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "Weather/Preview Content/WeatherApp/MainScreen/ViewModels/MainScreenViewModel.swift"
+            filePath = "Weather/Preview Content/Shared/ViewModels/WeatherAppViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "119"
-            endingLineNumber = "119"
-            landmarkName = "fetchWeatherInfo()"
+            startingLineNumber = "17"
+            endingLineNumber = "17"
+            landmarkName = "WeatherAppViewModel"
+            landmarkType = "3">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "FB9793C8-ADA8-4E91-A206-D5390D9E47F8"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Weather/Preview Content/Shared/Services/BackgroundTask/BackgroundTasksManager.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "20"
+            endingLineNumber = "20"
+            landmarkName = "setupBackgroundRequest(with:completion:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "E54EC9AA-77A5-4F49-879B-B0017686406B"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Weather/Preview Content/Shared/ViewModels/WeatherAppViewModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "26"
+            endingLineNumber = "26"
+            landmarkName = "init(dependencyManager:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "6ABD7952-B6F1-499D-9BF6-9925C96442F4"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Weather/Preview Content/Shared/ViewModels/WeatherAppViewModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "36"
+            endingLineNumber = "36"
+            landmarkName = "startUserNotif(task:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "3F931555-5070-470F-BB2E-51E18EEF6F4E"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Weather/Preview Content/Shared/ViewModels/WeatherAppViewModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "44"
+            endingLineNumber = "44"
+            landmarkName = "startUserNotif(task:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "51848CBF-9AB5-4047-82B3-8EA61FA983B6"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Weather/Preview Content/Shared/Services/UserNotifications/UserNatificationFactory.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "30"
+            endingLineNumber = "30"
+            landmarkName = "scheduleDailyNotification(weather:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "7AC81F82-C6A6-4EB8-9F16-15D88E6D709B"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Weather/Preview Content/Shared/Services/UserNotifications/UserNatificationFactory.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "29"
+            endingLineNumber = "29"
+            landmarkName = "scheduleDailyNotification(weather:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "622F5A73-7521-43F5-B61F-21A88B4B8BB7"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Weather/Preview Content/Shared/Services/UserNotifications/UserNatificationFactory.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "36"
+            endingLineNumber = "36"
+            landmarkName = "scheduleDailyNotification(weather:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

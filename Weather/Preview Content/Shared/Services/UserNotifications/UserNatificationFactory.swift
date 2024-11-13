@@ -1,5 +1,5 @@
 //
-//  UserNatificationFactory.swift
+//  UserNotificationFactory.swift
 //  Weather
 //
 //  Created by Gohar Vardanyan on 30.10.24.
@@ -8,7 +8,7 @@
 import Foundation
 import UserNotifications
 
-struct UserNatificationFactory: UserNotificationsFactoryInterface {
+struct UserNotificationFactory: UserNotificationsFactoryInterface {
     
     func scheduleDailyNotification(weather: CurrentWeather) {
         let content = UNMutableNotificationContent()
@@ -30,7 +30,7 @@ struct UserNatificationFactory: UserNotificationsFactoryInterface {
             content.title = "Daily Weather Reminder"
             content.body = "Good morning! Today's lower temperature: \(weather.main.tempMin), higher: \(weather.main.tempMax)"
             
-            let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+            let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
             
             let request = UNNotificationRequest(identifier: "dailyReminder", content: content, trigger: trigger)
             try? await UNUserNotificationCenter.current().add(request)

@@ -5,8 +5,11 @@
 //  Created by Gohar Vardanyan on 28.10.24.
 //
 
-enum KeychainError: Error {
+import Foundation
+
+enum KeychainError: Error, Equatable {
+    case itemNotFound
     case itemAddFail
-    case itemRetrieveFail
-    case emptyData
+    case invalidData
+    case unknownError(status: OSStatus)
 }

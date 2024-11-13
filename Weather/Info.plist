@@ -4,13 +4,16 @@
 <dict>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
-		<string>randomImage</string>
+		<string>com.weather.notifications.scheduler</string>
 	</array>
 	<key>GIDClientID</key>
 	<string>857710180788-o7l0u4rqpebln1nc166vdhlu7i6ggh2r.apps.googleusercontent.com</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string></string>
+		<string>fetch</string>
+		<string>processing</string>
+		<string>location</string>
 	</array>
 </dict>
 </plist>

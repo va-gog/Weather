@@ -34,4 +34,18 @@ final class StorageService: StorageServiceInterface {
     func fetchItem<T: Object & Storable>(byId id: String, type: T.Type) -> Storable? {
         return storage.objects(type).filter( {$0.id == id }).first
     }
+    
+    func removeItem(info: StorableInfo, type: Storable.Type, object: Storable) throws {
+        do {
+            if let userInfo = storage.objects(type).first(where: { $0.id == object.id }) {
+                try storage.write(withoutNotifying: [], {
+                    userInfo.removeFromObject(storeInfo: info)
+                })
+            } 
+        } catch let error as StorageError {
+            throw error
+        } catch {
+            throw StorageError.writeFailed(errorDescription: error.localizedDescription)
+        }
+    }
 }

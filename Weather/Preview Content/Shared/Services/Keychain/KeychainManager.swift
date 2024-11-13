@@ -20,7 +20,7 @@ class KeychainManager: KeychainManagerInterface {
     
     func saveItem(data: Data?, key: String, secClass: CFString) throws {
         guard let data else {
-            throw KeychainError.emptyData
+            throw KeychainError.invalidData
         }
         
         let query: [String: Any] = [
@@ -30,9 +30,7 @@ class KeychainManager: KeychainManagerInterface {
             kSecValueData as String: data
         ]
         
-        if !keychain.saveItem(query: query) {
-            throw KeychainError.itemAddFail
-        }
+        try keychain.saveItem(query: query)
     }
     
     func retrieveItem(key: String, secClass: CFString) throws -> String {
@@ -44,8 +42,8 @@ class KeychainManager: KeychainManagerInterface {
             kSecMatchLimit as String: kSecMatchLimitOne
         ]
         
-        guard let value = keychain.retrieveItem(query: query) else {
-            throw KeychainError.itemRetrieveFail
+        guard let value =  try keychain.retrieveItem(query: query) else {
+            throw KeychainError.itemNotFound
         }
         
         return value

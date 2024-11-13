@@ -7,40 +7,39 @@
 
 import SwiftUI
 
+@MainActor
 final class Coordinator: ObservableObject, @preconcurrency CoordinatorInterface {
     @Published var path: NavigationPath = NavigationPath()
+    
     var dependenciesManager: DependencyManagerInterface
     
-    @Published private var mainScreenViewModel: MainScreenViewModel?
-    @Published private var forecastScreenViewModel: WeatherDetailsViewModel?
+    private var mainScreenViewModel: MainScreenViewModel?
+    private var forecastScreenViewModel: WeatherDetailsViewModel?
     
-    init(dependenciesManager: DependencyManagerInterface,
-         mainScreenViewModel: MainScreenViewModel? = nil) {
+    init(dependenciesManager: DependencyManagerInterface) {
         self.dependenciesManager = dependenciesManager
-        self.mainScreenViewModel = MainScreenViewModel(coordinator: self)
     }
     
-    @MainActor
     func push(page: AppPages) {
-        DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
-            DispatchQueue.main.async {
-                self.path.append(page)
-            }
+        Task {
+            try await Task.sleep(nanoseconds: 1_000_000_000)
+            path.append(page)
         }
     }
     
-    @MainActor
+    func pushMainScreen() {
+        mainScreenViewModel = MainScreenViewModel(coordinator: self)
+        push(page: .main)
+    }
+    
     func pushForecastView(selectedCity: City, style: WeatherDetailsViewStyle, currentInfo: WeatherCurrentInfo?) {
         forecastScreenViewModel = WeatherDetailsViewModel(selectedCity: selectedCity,
                                                           style: style,
                                                           coordinator: self,
                                                           currentInfo: currentInfo)
-        Task { @MainActor in
             push(page: .forecast)
-        }
     }
     
-    @MainActor
     func pop(_ page: PopAction) {
         guard !path.isEmpty else { return }
         switch page {
@@ -59,14 +58,12 @@ final class Coordinator: ObservableObject, @preconcurrency CoordinatorInterface 
         }
     }
     
-    @MainActor
     func popForecastViewWhenDeleted(info: WeatherCurrentInfo?) {
         guard let info else { return }
         mainScreenViewModel?.deleteButtonPressed(info: info.currentWeather)
         pop(.delete)
     }
     
-    @MainActor
     func popForecastViewWhenAdded(info: WeatherCurrentInfo?) {
         guard let info else { return }
         mainScreenViewModel?.addButtonPressed(info: info)

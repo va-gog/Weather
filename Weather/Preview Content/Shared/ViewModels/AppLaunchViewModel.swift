@@ -37,18 +37,18 @@ final class AppLaunchViewModel: ObservableObject {
                         .dropFirst()
                         .sink { [weak self] status in
                             self?.coordinator.pop(PopAction.last)
-                                status == .authorized ? self?.push(AppPages.main) : self?.push(AppPages.locationAccess)
+                            status == .authorized ? self?.coordinator.pushMainScreen() : self?.push(AppPages.locationAccess)
                                 self?.authStateHandler = nil
                     }
                     dependencies.locationService.requestWhenInUseAuthorization()
                 case .authorized:
                     coordinator.pop(PopAction.authentication)
-                    push(AppPages.main)
-                    self.authStateHandler = nil
+                    coordinator.pushMainScreen()
+                    authStateHandler = nil
                 case .denied:
                     coordinator.pop(PopAction.authentication)
                     push(AppPages.locationAccess)
-                    self.authStateHandler = nil
+                    authStateHandler = nil
                 }
             }
         })
