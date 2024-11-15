@@ -1,3 +1,4 @@
+# A SwiftUI Weather App with Location Access, Secure Authentication, and Persistent Favorites
 1. When the user opens the application, a request is made for access to their current location.
    If the user grants permission, the authentication screen is displayed. If the user denies permission,
    a screen with a button appears, prompting them to go to the app settings to enable location access.
@@ -34,8 +35,48 @@
 
 ## **Architecture**
 - Coordinator Pattern for managing navigation
-- MVVM (Model-View-ViewModel) for a clean and testable structure
+- MVVM + C (Model-View-ViewModel + Coordinator) for a clean and testable structure
 - Feature-Based Structure for modular and organized code
 
 ## **Testing**
 - Unit Testing for verifying core functionality
+
+# SwiftUI Navigation Flow with Coordinators
+
+This project implements a navigation flow in SwiftUI using the Coordinator pattern, designed to provide flexible, structured navigation within the app. Inspired by UIKit's `UIViewController`-based navigation, this approach establishes a clean, modular navigation stack management system where each screen has its own Coordinator. The Coordinators communicate, maintain hierarchical relationships, and manage the navigation path for a seamless and dynamic navigation experience.
+
+## Project Overview
+
+The navigation flow is managed by a `BaseCoordinator`, which holds a `path` property representing the navigation stack. This path is responsible for pushing and popping screens dynamically. Each screen (analogous to a `UIViewController` in UIKit) has an individual Coordinator with a specific identifier or type. The Coordinators communicate with each other through a parent-child relationship, allowing for organized transitions between screens.
+
+### Key Components
+
+- **BaseCoordinator**:  
+  The central coordinator that keeps track of the navigation path, handling push and pop actions across the navigation stack. It acts as a mediator between the root Coordinator and individual child Coordinators.
+
+- **Screen Coordinators**:  
+  Each screen is managed by a dedicated Coordinator that:
+    - Has a unique identifier or type.
+    - Maintains a parent-child relationship with other Coordinators.
+    - Is added to the `children` array of its parent when a screen is pushed and removed on pop.
+
+### Path Management
+
+- **Pushing a Screen**:  
+  When a screen is pushed, the respective Coordinator is added to the parent's children, and the navigation path is updated in the root Coordinator.
+  
+- **Updating the Navigation Stack**:  
+  The root Coordinator updates the navigation stack based on the new path, prompting the appropriate Coordinator to return its associated view.
+  
+- **Popping a Screen**:  
+  A similar process occurs for pops, where the relevant Coordinator is removed, and the view stack is updated accordingly.
+
+### Workflow
+
+- **Pushing a Screen**:  
+  When a screen is pushed, the Coordinator responsible for it is set as a child of the current Coordinator. This hierarchy bubbles up to the `BaseCoordinator`, which updates the navigation path and instructs the navigation stack to present the correct view.
+
+- **Popping a Screen**:  
+  The same hierarchy-based logic applies for popping screens, with the `BaseCoordinator` updating the navigation path and triggering the stack to revert to the previous view.
+
+---
