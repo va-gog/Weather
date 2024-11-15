@@ -13,7 +13,8 @@ import SwiftUI
 class WeatherDetailsViewModelTests: XCTestCase {
     var viewModel: WeatherDetailsViewModel!
     var mockNetworkManager: MockNetworkManager!
-    var mockCoordinator: MockCoordinator!
+    var mockCoordinator: MockForecastScreenCoordinator!
+    var dependenciesManager: MockDependencyManager!
     var mockAuth: MockAuth!
     var cancellables: Set<AnyCancellable>!
     var style: Binding<WeatherDetailsViewStyle>!
@@ -22,8 +23,8 @@ class WeatherDetailsViewModelTests: XCTestCase {
         super.setUp()
         mockNetworkManager = MockNetworkManager()
         mockAuth = MockAuth()
-        mockCoordinator = MockCoordinator(dependenciesManager: MockDependencyManager(auth: mockAuth,
-                                                                                     networkService: mockNetworkManager))
+        dependenciesManager = MockDependencyManager(networkService: mockNetworkManager)
+        mockCoordinator = MockForecastScreenCoordinator(dependenciesManager: dependenciesManager)
         viewModel = WeatherDetailsViewModel(selectedCity: City(name: "Test",
                                                                lat: 10,
                                                                lon: 10),
@@ -37,6 +38,7 @@ class WeatherDetailsViewModelTests: XCTestCase {
         viewModel = nil
         mockNetworkManager = nil
         mockAuth = nil
+        dependenciesManager = nil
         mockCoordinator = nil
         cancellables = nil
         style = nil
@@ -238,7 +240,7 @@ class WeatherDetailsViewModelTests: XCTestCase {
         
         try? viewModel.signedOut()
         DispatchQueue.global().asyncAfter(deadline: .now() + 0.1) {
-            XCTAssertTrue(self.mockCoordinator.popAction == .signOut)
+            XCTAssertEqual(self.mockCoordinator.popedPage, [.forecast])
             expectation.fulfill()
         }
         
@@ -265,7 +267,7 @@ class WeatherDetailsViewModelTests: XCTestCase {
 
         viewModel.close()
         DispatchQueue.global().asyncAfter(deadline: .now() + 0.1) {
-            XCTAssertTrue(self.mockCoordinator.popAction == .forecastClose)
+            XCTAssertEqual(self.mockCoordinator.popedPage, [.forecast])
             expectation.fulfill()
         }
         wait(for: [expectation], timeout: 1)

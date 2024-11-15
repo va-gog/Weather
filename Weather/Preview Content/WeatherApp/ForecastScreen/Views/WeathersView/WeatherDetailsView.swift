@@ -11,7 +11,7 @@ import Combine
 struct WeatherDetailsView: View {
     @EnvironmentObject var viewModel: WeatherDetailsViewModel
     
-    var presentationInfo: WeatherDetailsViewPresentationInfo
+    var presentationInfo = WeatherDetailsViewPresentationInfo()
     
     var body: some View {
         ZStack {

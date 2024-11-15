@@ -9,7 +9,6 @@ import FirebaseCore
 import FirebaseAuth
 
 struct AuthWrapper: AuthInterface  {
-    
     var authenticatedUser: UserInterface? {
         Auth.auth().currentUser
     }

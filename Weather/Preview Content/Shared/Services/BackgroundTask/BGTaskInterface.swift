@@ -11,6 +11,4 @@ protocol BGTaskInterface {
     func setTaskCompleted(success: Bool)
 }
 
-extension BGTask: BGTaskInterface {
-    
-}
+extension BGTask: BGTaskInterface { }

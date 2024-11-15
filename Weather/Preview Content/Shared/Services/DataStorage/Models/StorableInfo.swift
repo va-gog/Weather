@@ -6,5 +6,5 @@
 //
 
 protocol StorableInfo {
-    func storableObjec(_ object: Storable)
+    func updateInfo(_ object: Storable)
 }

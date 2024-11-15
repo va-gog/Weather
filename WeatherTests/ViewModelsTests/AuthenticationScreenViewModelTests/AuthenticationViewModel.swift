@@ -24,7 +24,7 @@ final class AuthenticationViewModelTests: XCTestCase {
         mockKeychain = MockKeychainManager()
         dependenciesManager = MockDependencyManager(auth: mockAuth,
                                                     keychain: mockKeychain)
-        viewModel = AuthenticationViewModel(coordinator: MockCoordinator(dependenciesManager: dependenciesManager))
+        viewModel = AuthenticationViewModel(dependenciesManager: dependenciesManager)
         cancellables = []
     }
     

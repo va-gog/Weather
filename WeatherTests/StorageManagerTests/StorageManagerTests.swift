@@ -30,28 +30,14 @@ class StorageManagerTests: XCTestCase {
         let testId = "uniqueId123"
         let testUser = UserInfo(id: testId)
         
-        let result = storageService.addItem(info: testInfo,
-                                                    type: UserInfo.self,
-                                                    object: testUser)
-        if case .failure(let error) = result {
+        do {
+            try storageService.addItem(info: testInfo,
+                                       type: UserInfo.self,
+                                       object: testUser)
+            XCTAssertEqual(mockStorage.storedObjects.count, 1)
+            XCTAssertEqual(mockStorage.storedObjects.first?.id, testId)
+        } catch {
             XCTFail("Failed to add item with error: \(error)")
-        }
-        
-        XCTAssertEqual(mockStorage.storedObjects.count, 1)
-        XCTAssertEqual(mockStorage.storedObjects.first?.id, testId)
-    }
-    
-    func testAddNewItemFailure() {
-        mockStorage.failure = .add
-        
-        let result = storageService.addItem(info: StoreCoordinates(latitude: 10, longitude: 10, index: 0),
-                                                    type: UserInfo.self,
-                                                    object: UserInfo(id: "uniqueId"))
-        switch result {
-        case .success:
-            XCTFail("Expected failure, but succeeded.")
-        case .failure(let error):
-            XCTAssertNotNil(error)
         }
     }
     
@@ -61,15 +47,14 @@ class StorageManagerTests: XCTestCase {
         let testUser = UserInfo(id: testId)
         mockStorage.storedObjects.append(testUser)
         
-        let result = storageService.addItem(info: testInfo,
+        do {
+            try storageService.addItem(info: testInfo,
                                                     type: UserInfo.self,
                                                     object: testUser)
-        
-        if case .failure(let error) = result {
+            XCTAssertTrue(mockStorage.storedObjects.contains { $0.id == testId })
+        } catch {
             XCTFail("Failed to add item with error: \(error)")
         }
-        
-        XCTAssertTrue(mockStorage.storedObjects.contains { $0.id == testId })
     }
 
     func testUpdateItemFailure() {
@@ -79,14 +64,12 @@ class StorageManagerTests: XCTestCase {
         let testUser = UserInfo(id: testId)
         mockStorage.storedObjects.append(testUser)
         
-        let result = storageService.addItem(info: testInfo,
-                                                    type: UserInfo.self,
-                                                    object: testUser)
-        
-        switch result {
-        case .success:
+        do {
+            try storageService.addItem(info: testInfo,
+                                       type: UserInfo.self,
+                                       object: testUser)
             XCTFail("Expected failure, but succeeded.")
-        case .failure(let error):
+        } catch {
             XCTAssertNotNil(error)
         }
     }

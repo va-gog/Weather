@@ -9,14 +9,13 @@ import SwiftUI
 
 struct AppLaunchView: View {
     @EnvironmentObject var viewModel: AppLaunchViewModel
-    @ObservedObject var coordinator: Coordinator
+    @ObservedObject var coordinator: AppLaunchScreenCoordinator
     
     var body: some View {
         NavigationStack(path: $coordinator.path) {
-            //TODO: This should be replaced with LaunchScreen
             EmptyView()
                 .navigationDestination(for: AppPages.self) { page in
-                    AnyView(coordinator.build(page: page))
+                   coordinator.build(screen: page) ?? AnyView(EmptyView())
                 }
         }
         .onAppear() {

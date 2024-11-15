@@ -12,5 +12,5 @@ protocol Storable: Object {
     
     func updateObject(storeInfo: StorableInfo)
     func removeFromObject(storeInfo: StorableInfo)
-    func fetchStoredCoordinates() -> [Coordinates] 
+    func fetchStoredInfo() -> Decodable?
 }

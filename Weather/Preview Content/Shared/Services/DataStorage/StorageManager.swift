@@ -14,13 +14,13 @@ struct StorageManager: StorageManagerInterface {
     func fetchStoredCoordinates(by id: String?) -> [Coordinates] {
         let object = storageService.fetchItem(byId: id ?? "",
                                               type: UserInfo.self)
-        return (object as? UserInfo)?.fetchStoredCoordinates() ?? []
+        return (object as? UserInfo)?.fetchStoredInfo() as? [Coordinates] ?? []
     }
     
     func addItem(with id: String?, info: StorableInfo) {
         let newUserInfo = UserInfo(id: id ?? "")
         
-        _ = storageService.addItem(info: info,
+        try? storageService.addItem(info: info,
                                    type: UserInfo.self,
                                    object: newUserInfo)
     }

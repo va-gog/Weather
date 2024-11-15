@@ -1,5 +1,5 @@
 //
-//  CoordinatorTests.swift
+//  AppLaunchScreenCoordinatorTests.swift
 //  Weather
 //
 //  Created by Gohar Vardanyan on 10.11.24.
@@ -8,60 +8,36 @@
 import XCTest
 @testable import Weather
 
-final class CoordinatorTests: XCTestCase {
-    var coordinator: Coordinator!
+final class AppLaunchScreenCoordinatorTests: XCTestCase {
+    var coordinator: AppLaunchScreenCoordinator!
+    var mockDependencyManager: MockDependencyManager!
 
-    @MainActor
     override func setUp() {
         super.setUp()
-            coordinator = Coordinator(dependenciesManager: MockDependencyManager())
+        mockDependencyManager = MockDependencyManager()
+        coordinator = AppLaunchScreenCoordinator(dependenciesManager: mockDependencyManager)
     }
 
-    override func tearDown() {
-        coordinator = nil
-        super.tearDown()
-    }
-
-    @MainActor
     func testPushPage() {
-        let expectation = self.expectation(description: "Push page")
-        coordinator.pushMainScreen()
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.3) {
-            XCTAssertEqual(self.coordinator.path.count, 1)
-            expectation.fulfill()
-        }
-        
-        wait(for: [expectation], timeout: 2.0)
-    }
-
-    @MainActor
-    func testPopPage() {
-        coordinator.path.append(AppPages.main)
+        coordinator.push(page: .locationAccess)
+        XCTAssertEqual(coordinator.childs.count, 1)
         XCTAssertEqual(coordinator.path.count, 1)
+        XCTAssertEqual(coordinator.childs.first?.type, .locationAccess)
         
-        coordinator.pop(.last)
-        XCTAssertTrue(coordinator.path.isEmpty)
-    }
-
-    @MainActor
-    func testPopForecastWithClose() {
-        coordinator.path.append(AppPages.forecast)
+        coordinator.push(page: .main)
+        XCTAssertEqual(coordinator.childs.count, 1)
         XCTAssertEqual(coordinator.path.count, 1)
-        
-        coordinator.pop(.forecastClose)
-        XCTAssertTrue(coordinator.path.isEmpty)
+        XCTAssertEqual(coordinator.childs.first?.type, .main)
     }
     
-    @MainActor
-    func testSignOute() {
-        coordinator.path.append(AppPages.main)
-        coordinator.path.append(AppPages.forecast)
-
-        XCTAssertEqual(coordinator.path.count, 2)
+    func testPopPage() {
+        coordinator.push(page: .locationAccess)
+        XCTAssertEqual(coordinator.childs.count, 1)
+        XCTAssertEqual(coordinator.path.count, 1)
+        XCTAssertEqual(coordinator.childs.first?.type, .locationAccess)
         
-        coordinator.pop(.signOut)
-        XCTAssertTrue(coordinator.path.isEmpty)
+        coordinator.pop(pages: [.locationAccess])
+        XCTAssertEqual(coordinator.childs.count, 0)
+        XCTAssertEqual(coordinator.path.count, 0)
     }
-
 }

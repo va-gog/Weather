@@ -10,6 +10,50 @@ import XCTest
 import CoreLocation
 import Combine
 
+import SwiftUI
+
+final class MockMainScreenCoordinator: MainScreenCoordinatorInterface {
+    var type: AppPages = .main
+    var parent: CoordinatorInterface?
+    var childs: [CoordinatorInterface] = []
+    var dependenciesManager: DependencyManagerInterface
+    var selectedCity: City?
+    var style: WeatherDetailsViewStyle?
+    var currentInfo: WeatherCurrentInfo?
+    var popedPage: [AppPages] = []
+    var pushedPage: AppPages?
+
+    init( dependenciesManager: DependencyManagerInterface) {
+        self.dependenciesManager = dependenciesManager
+    }
+    
+    func push(page: AppPages) {
+        pushedPage = page
+    }
+    
+    func pop(pages: [AppPages]) {
+        popedPage = pages
+    }
+    
+    func build(screen: AppPages) -> AnyView? {
+        AnyView(EmptyView())
+    }
+    
+    func pushForecastView(selectedCity: City, style: WeatherDetailsViewStyle, currentInfo: WeatherCurrentInfo?) {
+        self.selectedCity = selectedCity
+        self.style = style
+        self.currentInfo = currentInfo
+    }
+    func popForecastViewWhenDeleted(info: WeatherCurrentInfo?) {
+        currentInfo = info
+    }
+    
+    func popForecastViewWhenAdded(info: WeatherCurrentInfo?) {
+        currentInfo = info
+
+    }
+}
+
 class MainScreenViewModelTests: XCTestCase {
     var viewModel: MainScreenViewModel!
     var mockDependencyManager: MockDependencyManager!
@@ -17,7 +61,7 @@ class MainScreenViewModelTests: XCTestCase {
     var mockStorageService: MockDataStorageService!
     var mockStorageManager: MockDataStorageManager!
     var mockNetworkManager: MockNetworkManager!
-    var coordinator: MockCoordinator!
+    var coordinator: MockMainScreenCoordinator!
     var mockAuth: MockAuth!
     var cancellables: Set<AnyCancellable>!
 
@@ -32,7 +76,7 @@ class MainScreenViewModelTests: XCTestCase {
                                                       storageManager: mockStorageManager,
                                                       networkService: mockNetworkManager,
                                                       locationService: mockLocationService)
-        coordinator = MockCoordinator(dependenciesManager: mockDependencyManager)
+        coordinator = MockMainScreenCoordinator(dependenciesManager: mockDependencyManager)
 
         viewModel = MainScreenViewModel(coordinator: coordinator)
         cancellables = []

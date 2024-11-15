@@ -28,7 +28,7 @@ final class AppLaunchViewModel: ObservableObject {
         authStateHandler = dependencies.auth.addStateDidChangeListener(completion: { [weak self] auth, user in
             guard let self else { return }
             if user == nil {
-                self.push(AppPages.authentication)
+                self.coordinator.push(page: .authentication)
                 self.authStateHandler = nil
             } else {
                 switch dependencies.locationService.statusSubject.value {
@@ -36,26 +36,18 @@ final class AppLaunchViewModel: ObservableObject {
                     cancelable = dependencies.locationService.statusSubject
                         .dropFirst()
                         .sink { [weak self] status in
-                            self?.coordinator.pop(PopAction.last)
-                            status == .authorized ? self?.coordinator.pushMainScreen() : self?.push(AppPages.locationAccess)
+                            status == .authorized ? self?.coordinator.push(page: .main) : self?.coordinator.push(page: .locationAccess)
                                 self?.authStateHandler = nil
                     }
                     dependencies.locationService.requestWhenInUseAuthorization()
                 case .authorized:
-                    coordinator.pop(PopAction.authentication)
-                    coordinator.pushMainScreen()
+                    coordinator.push(page: .main)
                     authStateHandler = nil
                 case .denied:
-                    coordinator.pop(PopAction.authentication)
-                    push(AppPages.locationAccess)
+                    coordinator.push(page: .locationAccess)
                     authStateHandler = nil
                 }
             }
         })
     }
-    
-    private func push(_ page: AppPages) {
-        coordinator.push(page: page)
-    }
-
 }

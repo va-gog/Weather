@@ -32,7 +32,7 @@ final class StoreCoordinates: Object, Comparable, StorableInfo {
         && lhs.longitude == rhs.longitude
     }
     
-    func storableObjec(_ object: Storable) {
+    func updateInfo(_ object: Storable) {
         (object as? UserInfo)?.coordinates.append(self)
     }
     

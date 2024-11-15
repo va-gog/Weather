@@ -5,14 +5,16 @@
 //  Created by Gohar Vardanyan on 10.11.24.
 //
 
+import SwiftUI
+
 protocol CoordinatorInterface {
+    var type: AppPages { get }
+    var parent: CoordinatorInterface? { get }
+    var childs: [CoordinatorInterface] { get }
     var dependenciesManager: DependencyManagerInterface { get }
     
     func push(page: AppPages)
-    func pushMainScreen()
-    func pushForecastView(selectedCity: City, style: WeatherDetailsViewStyle, currentInfo: WeatherCurrentInfo?)
-    
-    func pop(_ page: PopAction)
-    func popForecastViewWhenDeleted(info: WeatherCurrentInfo?)
-    func popForecastViewWhenAdded(info: WeatherCurrentInfo?)
+    func pop(pages: [AppPages])
+    func build(screen: AppPages) -> AnyView?
 }
+

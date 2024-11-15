@@ -24,7 +24,8 @@ class AppLaunchViewModelTests: XCTestCase {
         locationServiceMock = MockLocationService()
         dependenciesMock = MockDependencyManager(auth: authMock,
                                                  locationService: locationServiceMock)
-        coordinatorMock = MockCoordinator(dependenciesManager: dependenciesMock)
+        coordinatorMock = MockCoordinator(type: .main,
+                                          dependenciesManager: dependenciesMock)
         viewModel = AppLaunchViewModel(coordinator: coordinatorMock)
     }
 
@@ -49,7 +50,6 @@ class AppLaunchViewModelTests: XCTestCase {
         
         self.viewModel.registerAuthStateHandler()
         
-        XCTAssertEqual(self.coordinatorMock.popAction, PopAction.authentication)
         XCTAssertEqual(self.coordinatorMock.pushedPage, AppPages.locationAccess)
     }
     
@@ -60,33 +60,21 @@ class AppLaunchViewModelTests: XCTestCase {
         
         viewModel.registerAuthStateHandler()
         
-        XCTAssertEqual(self.coordinatorMock.popAction, PopAction.authentication)
         XCTAssertEqual(self.coordinatorMock.pushedPage, AppPages.main)
     }
 
     func testUserAuthenticatedLocationNotDetermined_UserDenied() {
-        let expectation = XCTestExpectation(description: "Location access denied")
-
         authMock.signedOut = false
         authMock.user = MockUser(uid: "Test")
         locationServiceMock.statusSubject.send(.notDetermined)
         viewModel.registerAuthStateHandler()
         locationServiceMock.statusSubject.send(.denied)
-
-        DispatchQueue.global().asyncAfter(deadline: .now() + 0.1) {
-            XCTAssertEqual(self.coordinatorMock.popAction, PopAction.last)
-            XCTAssertEqual(self.coordinatorMock.pushedPage, AppPages.locationAccess)
-            XCTAssertTrue(self.locationServiceMock.requestWhenInUseAuthorizationCalled)
-
-            expectation.fulfill()
-        }
         
-        wait(for: [expectation], timeout: 1)
+        XCTAssertEqual(self.coordinatorMock.pushedPage, AppPages.locationAccess)
+        XCTAssertTrue(self.locationServiceMock.requestWhenInUseAuthorizationCalled)
     }
 
     func testUserAuthenticatedLocationNotDetermined_UserGaveAccess() {
-        let expectation = XCTestExpectation(description: "Location access denied")
-
         authMock.signedOut = false
         authMock.user = MockUser(uid: "Test")
         locationServiceMock.statusSubject.send(.notDetermined)
@@ -94,14 +82,7 @@ class AppLaunchViewModelTests: XCTestCase {
         viewModel.registerAuthStateHandler()
         locationServiceMock.statusSubject.send(.authorized)
         
-        DispatchQueue.global().asyncAfter(deadline: .now() + 0.2) {
-            XCTAssertEqual(self.coordinatorMock.popAction, PopAction.last)
-            XCTAssertEqual(self.coordinatorMock.pushedPage, AppPages.main)
-            XCTAssertTrue(self.locationServiceMock.requestWhenInUseAuthorizationCalled)
-
-            expectation.fulfill()
-        }
-        
-        wait(for: [expectation], timeout: 1)
+        XCTAssertEqual(self.coordinatorMock.pushedPage, AppPages.main)
+        XCTAssertTrue(self.locationServiceMock.requestWhenInUseAuthorizationCalled)
     }
 }

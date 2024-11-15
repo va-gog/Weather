@@ -6,46 +6,29 @@
 //
 
 @testable import Weather
+import SwiftUI
 
 final class MockCoordinator: CoordinatorInterface {
-    
     var dependenciesManager: DependencyManagerInterface
-    var selectedCity: City?
-    var style: WeatherDetailsViewStyle?
-    var currentInfo: WeatherCurrentInfo?
-    var popAction: PopAction?
+    var type: AppPages
+    var parent: CoordinatorInterface?
+    var childs: [CoordinatorInterface] = []
     var pushedPage: AppPages?
+    var popedPages: [AppPages] = []
     
-    init(dependenciesManager: DependencyManagerInterface) {
+    init(type: AppPages, dependenciesManager: DependencyManagerInterface) {
+        self.type = type
         self.dependenciesManager = dependenciesManager
-    }
-    
-    func pushForecastView(selectedCity: City,
-                          style: WeatherDetailsViewStyle,
-                          currentInfo: WeatherCurrentInfo?) {
-        self.selectedCity = selectedCity
-        self.style = style
-        self.currentInfo = currentInfo
-    }
-    
-    func pushMainScreen() {
-        pushedPage = .main
-    }
-    
-    func popForecastViewWhenDeleted(info: WeatherCurrentInfo?) {
-        currentInfo = info
-    }
-    
-    func popForecastViewWhenAdded(info: WeatherCurrentInfo?) {
-        currentInfo = info
     }
     
     func push(page: AppPages) {
         pushedPage = page
     }
+    func pop(pages: [AppPages]) {
+        popedPages = pages
+    }
     
-    func pop(_ page: PopAction) {
-        popAction = page
+    func build(screen: AppPages) -> AnyView? {
+        AnyView(EmptyView())
     }
 }
-

@@ -6,6 +6,7 @@
 //
 
 enum AppPages: Hashable {
+    case launch
     case main
     case authentication
     case locationAccess

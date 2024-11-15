@@ -11,7 +11,6 @@ import MapKit
 import FirebaseAuth
 
 struct MainView: View {
-    private let id = UUID()
     @State private var searchText = ""
     @State private var searchSubject = PassthroughSubject<String, Never>()
     @State private var searchCancellable: AnyCancellable?
@@ -22,29 +21,29 @@ struct MainView: View {
     private var presentationInfo = MainViewPresentationInfo()
     
     var body: some View {
-                VStack {
-                    SearchView(searchText: $searchText,
-                               icon: presentationInfo.searchIcon,
-                               placeholder: presentationInfo.searchPlaceholder,
-                               closeIcon: presentationInfo.closeIcon,
-                               presentationInfo: SearchViewPresentationInfo()) { newValue in
-                        searchSubject.send(newValue)
-                    }
-                               .frame(height: presentationInfo.searchHeight)
-                               .background(Color(presentationInfo.searchBackgroundColor))
-                               .cornerRadius(presentationInfo.cornerradius)
-                               .padding(.horizontal)
-                    
-                    searchResultView
-                    Spacer()
-                }
-            .onAppear {
-                onApperaAction()
+        VStack {
+            SearchView(searchText: $searchText,
+                       icon: presentationInfo.searchIcon,
+                       placeholder: presentationInfo.searchPlaceholder,
+                       closeIcon: presentationInfo.closeIcon,
+                       presentationInfo: SearchViewPresentationInfo()) { newValue in
+                searchSubject.send(newValue)
             }
-            .onDisappear {
-                searchCancellable?.cancel()
-            }
-            Spacer()        
+                       .frame(height: presentationInfo.searchHeight)
+                       .background(Color(presentationInfo.searchBackgroundColor))
+                       .cornerRadius(presentationInfo.cornerradius)
+                       .padding(.horizontal)
+            
+            searchResultView
+            Spacer()
+        }
+        .onAppear {
+            onApperaAction()
+        }
+        .onDisappear {
+            searchCancellable?.cancel()
+        }
+        Spacer()
     }
     
     private var searchResultView: some View {

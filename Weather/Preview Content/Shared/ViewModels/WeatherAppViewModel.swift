@@ -13,14 +13,11 @@ import CoreLocation
 
 final class WeatherAppViewModel {
     static let appRefreshIdentifier = "com.weather.notifications.scheduler"
-    
-    @ObservedObject var coordinatorViewModel: AppLaunchViewModel
-    
+        
     private var dependencies: WeatherAppViewDependenciesInterface
     private var cancellables: [AnyCancellable] = []
     
     init(dependencyManager: DependencyManagerInterface) {
-        self.coordinatorViewModel = AppLaunchViewModel(coordinator: Coordinator(dependenciesManager: dependencyManager))
         self.dependencies = dependencyManager.createWeatherAppViewDependencies()
         self.dependencies.backgroundTaskManagery.setupBackgroundRequest(with: Self.appRefreshIdentifier) { [weak self] task in
             self?.startUserNotif(task: task)
@@ -39,7 +36,6 @@ final class WeatherAppViewModel {
                                                                                         lat: location.coordinate.longitude))
             self.dependencies.networkService.requestData(request,
                                                          as: CurrentWeather.self).sink { _ in
-                print("Could't fetch current location to start notifications")
             } receiveValue: { weather in
                 self.scheduleDailyNotification(weather: weather)
                 task.setTaskCompleted(success: true)

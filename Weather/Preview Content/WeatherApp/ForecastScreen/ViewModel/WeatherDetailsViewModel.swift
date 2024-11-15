@@ -16,13 +16,13 @@ final class WeatherDetailsViewModel: ObservableObject {
     
     private var selectedCity: City
     private(set) var style: WeatherDetailsViewStyle
-    private var coordinator: CoordinatorInterface
+    private weak var coordinator: ForecastScreenCoordinatorInterface?
     private var dependencies: ForecastScreenDependenciesInterface
     private var cancellables: [AnyCancellable] = []
     
     init(selectedCity: City,
          style: WeatherDetailsViewStyle,
-         coordinator: CoordinatorInterface,
+         coordinator: ForecastScreenCoordinatorInterface,
          currentInfo: WeatherCurrentInfo?) {
         self.selectedCity = selectedCity
         self.style = style
@@ -33,19 +33,19 @@ final class WeatherDetailsViewModel: ObservableObject {
     
     func addFavoriteWeather() {
         Task { @MainActor in
-            coordinator.popForecastViewWhenAdded(info: currentInfo)
+            coordinator?.closeWhenAdded(info: currentInfo)
         }
     }
     
     func deleteButtonAction() {
         Task { @MainActor in
-            coordinator.popForecastViewWhenDeleted(info: currentInfo)
+            coordinator?.closeWhenDeleted(info: currentInfo)
         }
     }
     
     func signedOut() throws {
         do {
-            coordinator.pop(.signOut)
+            coordinator?.signOut()
             try dependencies.auth.signOut()
         } catch {
             throw AppError.signOutFail
@@ -54,7 +54,7 @@ final class WeatherDetailsViewModel: ObservableObject {
     
     func close() {
         Task { @MainActor in
-            coordinator.pop(PopAction.forecastClose)
+            coordinator?.cancel()
         }
     }
     

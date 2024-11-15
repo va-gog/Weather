@@ -41,10 +41,11 @@ class UserInfoTests: XCTestCase {
         let longitude = -122.4194
         userInfo.coordinates.append(StoreCoordinates(latitude: latitude, longitude: longitude, index: 0))
 
-        let fetchedCoordinates = userInfo.fetchStoredCoordinates()
+        let fetchedCoordinates = userInfo.fetchStoredInfo() as? [Coordinates]
 
-        XCTAssertEqual(fetchedCoordinates.count, 1)
-        XCTAssertEqual(fetchedCoordinates.first?.lon, longitude)
-        XCTAssertEqual(fetchedCoordinates.first?.lat, latitude)
+        XCTAssertNotNil(fetchedCoordinates)
+        XCTAssertEqual(fetchedCoordinates!.count, 1)
+        XCTAssertEqual(fetchedCoordinates!.first?.lon, longitude)
+        XCTAssertEqual(fetchedCoordinates!.first?.lat, latitude)
     }
 }

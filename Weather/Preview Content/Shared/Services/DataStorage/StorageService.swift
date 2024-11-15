@@ -15,24 +15,19 @@ final class StorageService: StorageServiceInterface {
         self.storage = storage
     }
     
-    func addItem(info: StorableInfo, type: Storable.Type, object: Storable) -> Result<Void, Error> {
+    func addItem(info: StorableInfo, type: Storable.Type, object: Storable) throws {
         do {
             if let userInfo = storage.objects(type).filter( { $0.id == object.id }).first {
                 try storage.write(withoutNotifying: [], {
-                    info.storableObjec(userInfo)
+                    info.updateInfo(userInfo)
                 })
             } else {
                 try storage.add(object, block: nil)
             }
-            return .success(())
         } catch {
             print("Failed to write to storage: \(error)")
-            return .failure(error)
+            throw StorageError.writeFailed(errorDescription: error.localizedDescription)
         }
-    }
-    
-    func fetchItem<T: Object & Storable>(byId id: String, type: T.Type) -> Storable? {
-        return storage.objects(type).filter( {$0.id == id }).first
     }
     
     func removeItem(info: StorableInfo, type: Storable.Type, object: Storable) throws {
@@ -47,5 +42,9 @@ final class StorageService: StorageServiceInterface {
         } catch {
             throw StorageError.writeFailed(errorDescription: error.localizedDescription)
         }
+    }
+    
+    func fetchItem<T: Object & Storable>(byId id: String, type: T.Type) -> Storable? {
+        return storage.objects(type).filter( {$0.id == id }).first
     }
 }

@@ -22,14 +22,12 @@ class AuthenticationViewModel: ObservableObject {
     @Published var displayName: String = ""
     @Published var authenticationState: AuthenticationState = .none
     
-    private var coordinator: CoordinatorInterface
     private var authStateHandler: AuthStateDidChangeListenerHandle?
     
     private var dependencies: AuthenticationScreenDependenciesInterface
     
-    init(coordinator: CoordinatorInterface) {
-        self.coordinator = coordinator
-        self.dependencies = coordinator.dependenciesManager.createAuthenticationScreenDependencies()
+    init(dependenciesManager: DependencyManagerInterface) {
+        self.dependencies = dependenciesManager.createAuthenticationScreenDependencies()
         
         $flow
             .combineLatest($email, $password, $confirmPassword)

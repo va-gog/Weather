@@ -30,7 +30,7 @@ class UserInfo: Object, Storable {
         coordinates.remove(at: storeInfo.index)
     }
 
-    func fetchStoredCoordinates() -> [Coordinates] {
+    func fetchStoredInfo() -> Decodable? {
         coordinates.map { Coordinates(lon: $0.longitude, lat: $0.latitude) }
     }
 }

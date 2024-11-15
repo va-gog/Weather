@@ -12,16 +12,19 @@ struct WeatherApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @Environment(\.scenePhase) private var scenePhase
     
+    private var dependenciesManager = DependencyManager()
     private var viewModel: WeatherAppViewModel
+    @ObservedObject private var coordinatorViewModel: AppLaunchViewModel
     
     init() {
-        self.viewModel = WeatherAppViewModel(dependencyManager: DependencyManager())
+        self.viewModel = WeatherAppViewModel(dependencyManager: dependenciesManager)
+        self.coordinatorViewModel = AppLaunchViewModel(coordinator: AppLaunchScreenCoordinator(dependenciesManager: dependenciesManager))
     }
     
     var body: some Scene {
         WindowGroup {
-            AppLaunchView(coordinator: viewModel.coordinatorViewModel.coordinator as! Coordinator)
-                .environmentObject(viewModel.coordinatorViewModel)
+            AppLaunchView(coordinator: coordinatorViewModel.coordinator as! AppLaunchScreenCoordinator)
+                .environmentObject(coordinatorViewModel)
                 .onChange(of: scenePhase) { _,  phase in
                     if phase == .background {
                         viewModel.submitBackgroundTasks()

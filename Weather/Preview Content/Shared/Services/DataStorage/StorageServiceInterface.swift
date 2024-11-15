@@ -11,6 +11,6 @@ import RealmSwift
 
 protocol StorageServiceInterface {
     func fetchItem<T: Object & Storable>(byId id: String, type: T.Type) -> Storable?
-    func addItem(info: StorableInfo, type: Storable.Type, object: Storable) -> Result<Void, Error>
+    func addItem(info: StorableInfo, type: Storable.Type, object: Storable) throws
     func removeItem(info: StorableInfo, type: Storable.Type, object: Storable) throws
 }

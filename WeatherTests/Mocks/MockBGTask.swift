@@ -8,9 +8,8 @@
 @testable import Weather
 
 struct MockBGTask: BGTaskInterface {
-    func setTaskCompleted(success: Bool) {
-        true
-    }
     
+    func setTaskCompleted(success: Bool) {
+    }
     
 }

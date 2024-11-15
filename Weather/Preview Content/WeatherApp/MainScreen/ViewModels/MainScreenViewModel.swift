@@ -18,11 +18,11 @@ final class MainScreenViewModel: ObservableObject {
     @Published var fetchState: FetchState = .none
     @Published var weatherInfo: [WeatherCurrentInfo] = []
     
-    private var coordinator: CoordinatorInterface
+    private weak var coordinator: MainScreenCoordinatorInterface?
     private var dependencies: MainScreenDependenciesInterface
     private var cancelables: [AnyCancellable] = []
     
-    init(coordinator: CoordinatorInterface) {
+    init(coordinator: MainScreenCoordinatorInterface) {
         self.coordinator = coordinator
         self.dependencies = coordinator.dependenciesManager.createMainScreenDependencies()
         
@@ -38,13 +38,13 @@ final class MainScreenViewModel: ObservableObject {
         let selectedCity = City(name: info.currentWeather.name,
                                 lat: info.currentWeather.coord.lat,
                                 lon: info.currentWeather.coord.lon)
-        coordinator.pushForecastView(selectedCity: selectedCity,
+        coordinator?.pushForecastView(selectedCity: selectedCity,
                                      style: .overlayAdded,
                                      currentInfo: info)
     }
     
     func citySelected(_ city: City) {
-        coordinator.pushForecastView(selectedCity: city,
+        coordinator?.pushForecastView(selectedCity: city,
                                      style: detailsViewPresentationStyle(selectedCity: city),
                                      currentInfo: nil)
         
@@ -68,8 +68,8 @@ final class MainScreenViewModel: ObservableObject {
                                            index: weatherInfo.count)
         dependencies.storageManager.addItem(with: dependencies.auth.authenticatedUser?.uid,
                                             info: coordinates)
-        Task { @MainActor in
-            self.weatherInfo.append(info)
+        Task { @MainActor [weak self]  in
+            self?.weatherInfo.append(info)
         }
     }
     

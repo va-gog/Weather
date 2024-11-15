@@ -16,10 +16,9 @@ final class MockDataStorageService: StorageServiceInterface {
         return object
     }
     
-    func addItem(info: StorableInfo, type: Storable.Type, object: Storable) -> Result<Void, Error> {
+    func addItem(info: StorableInfo, type: Storable.Type, object: Storable) throws {
         self.info = info
         self.object = object
-        return .success(())
     }
     
     func removeItem(info: any StorableInfo, type: any Storable.Type, object: any Storable) throws { }
