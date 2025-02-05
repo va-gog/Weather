@@ -14,7 +14,7 @@ struct AppLaunchView: View {
     var body: some View {
         NavigationStack(path: $coordinator.path) {
             EmptyView()
-                .navigationDestination(for: AppPages.self) { page in
+                .navigationDestination(for: WeatherAppScreen.self) { page in
                    coordinator.build(screen: page) ?? AnyView(EmptyView())
                 }
         }

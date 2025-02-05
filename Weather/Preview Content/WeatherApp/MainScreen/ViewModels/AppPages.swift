@@ -5,12 +5,13 @@
 //  Created by Gohar Vardanyan on 05.11.24.
 //
 
-enum AppPages: Hashable {
+
+protocol AppScreen: Hashable { }
+
+enum WeatherAppScreen: AppScreen {
     case launch
     case main
     case authentication
     case locationAccess
     case forecast
 }
-
-

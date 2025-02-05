@@ -13,20 +13,22 @@ import CoreLocation
 
 final class WeatherAppViewModel {
     static let appRefreshIdentifier = "com.weather.notifications.scheduler"
-        
-    private var dependencies: WeatherAppViewDependenciesInterface
+    
+    @Dependency private var locationService: LocationServiceInterface
+    @Dependency private var networkService: NetworkServiceProtocol
+    @Dependency private var notificationsFactory: UserNotificationsFactoryInterface
+    @Dependency private var backgroundTaskManagery: BackgroundTasksManagerInterface
+    
     private var cancellables: [AnyCancellable] = []
     
-    init(dependencyManager: DependencyManagerInterface) {
-        self.dependencies = dependencyManager.createWeatherAppViewDependencies()
-        self.dependencies.backgroundTaskManagery.setupBackgroundRequest(with: Self.appRefreshIdentifier) { [weak self] task in
+    init() {
+        backgroundTaskManagery.setupBackgroundRequest(with: Self.appRefreshIdentifier) { [weak self] task in
             self?.startUserNotif(task: task)
         }
-        
     }
     
     func startUserNotif(task: BGTaskInterface) {
-        let locationService = dependencies.locationService
+        let locationService = locationService
         locationService.startTracking()
         locationService.latestLocationObject.sink { completion in
         } receiveValue: { [weak self] location in
@@ -34,7 +36,7 @@ final class WeatherAppViewModel {
             
             let request = RequestFactory.currentWeatherRequest(coordinates: Coordinates(lon: location.coordinate.longitude,
                                                                                         lat: location.coordinate.longitude))
-            self.dependencies.networkService.requestData(request,
+            self.networkService.requestData(request,
                                                          as: CurrentWeather.self).sink { _ in
             } receiveValue: { weather in
                 self.scheduleDailyNotification(weather: weather)
@@ -46,11 +48,11 @@ final class WeatherAppViewModel {
     }
     
     func submitBackgroundTasks() {
-        dependencies.backgroundTaskManagery.submitBackgroundTasks(with: Self.appRefreshIdentifier)
+        backgroundTaskManagery.submitBackgroundTasks(with: Self.appRefreshIdentifier)
     }
     
     
     private func scheduleDailyNotification(weather: CurrentWeather) {
-        dependencies.notificationsFactory.scheduleDailyNotification(weather: weather)
+        notificationsFactory.scheduleDailyNotification(weather: weather)
     }
 }

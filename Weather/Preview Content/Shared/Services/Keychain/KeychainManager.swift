@@ -9,12 +9,11 @@ import Foundation
 // TODO: Remove query init into factory
 
 class KeychainManager: KeychainManagerInterface {
+    @Dependency private var keychain: KeychainInterface
+
     private let service: String
-    private var keychain: KeychainInterface
     
-    init(keychain: KeychainInterface = KeychainAdapter(),
-         service: String = "com.default.identifier") {
-        self.keychain = keychain
+    init(service: String = "com.default.identifier") {
         self.service = service
     }
     

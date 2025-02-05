@@ -7,25 +7,15 @@
 
 import SwiftUI
 
-final class AuthenticationViewCoordinator: CoordinatorInterface {
-    var type: AppPages = .authentication
-    var parent: (CoordinatorInterface)?
-    var childs: [CoordinatorInterface] = []
-    
-    var dependenciesManager: DependencyManagerInterface
-    
-    init(dependenciesManager: DependencyManagerInterface) {
-        self.dependenciesManager = dependenciesManager
-    }
-    
-    func push(page: AppPages) {}
-    
-    func pop(pages: [AppPages]) {}
-
-    func build(screen: AppPages) -> AnyView? {
+final class AuthenticationViewCoordinator: CoordinatorInterface {    
+    var type: any AppScreen = WeatherAppScreen.authentication
+    var parent: (any CoordinatorInterface)?
+    var childs: [any CoordinatorInterface] = []
+        
+    func build(screen: any AppScreen) -> AnyView? {
         AnyView(
         AuthenticationView()
-            .environmentObject(AuthenticationViewModel(dependenciesManager: dependenciesManager))
+            .environmentObject(AuthenticationViewModel())
             .navigationBarBackButtonHidden(true)
             .navigationBarHidden(true)
         )

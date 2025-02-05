@@ -9,7 +9,7 @@ import RealmSwift
 import Foundation
 
 struct StorageManager: StorageManagerInterface {
-    var storageService: StorageServiceInterface
+    @Dependency var storageService: StorageServiceInterface
     
     func fetchStoredCoordinates(by id: String?) -> [Coordinates] {
         let object = storageService.fetchItem(byId: id ?? "",

@@ -9,11 +9,7 @@ import RealmSwift
 import Foundation
 
 final class StorageService: StorageServiceInterface {
-    private var storage: StorageInterface
-    
-    init(storage: StorageInterface = RealmWrapper()) {
-        self.storage = storage
-    }
+    @Dependency private var storage: StorageInterface
     
     func addItem(info: StorableInfo, type: Storable.Type, object: Storable) throws {
         do {

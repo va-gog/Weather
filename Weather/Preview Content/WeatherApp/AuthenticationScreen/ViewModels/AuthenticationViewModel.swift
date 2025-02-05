@@ -22,13 +22,12 @@ class AuthenticationViewModel: ObservableObject {
     @Published var displayName: String = ""
     @Published var authenticationState: AuthenticationState = .none
     
+    @Dependency private var keychain: KeychainManagerInterface
+    @Dependency private var auth: AuthInterface
+    
     private var authStateHandler: AuthStateDidChangeListenerHandle?
     
-    private var dependencies: AuthenticationScreenDependenciesInterface
-    
-    init(dependenciesManager: DependencyManagerInterface) {
-        self.dependencies = dependenciesManager.createAuthenticationScreenDependencies()
-        
+    init() {
         $flow
             .combineLatest($email, $password, $confirmPassword)
             .map { flow, email, password, confirmPassword in
@@ -42,7 +41,7 @@ class AuthenticationViewModel: ObservableObject {
     
     func autofillPassword() {
         do {
-            password = try dependencies.keychain.retrieveItem(key: email,
+            password = try keychain.retrieveItem(key: email,
                                                               secClass: kSecClassGenericPassword)
         } catch {
             password = ""
@@ -75,10 +74,10 @@ class AuthenticationViewModel: ObservableObject {
     
     private func signInWithEmailPassword() async -> Bool {
         do {
-            _ = try await dependencies.auth.signIn(withEmail: self.email,
-                                                   password: self.password)
-            try? self.dependencies.keychain.saveItem(data: self.password.data(using: .utf8),
-                                                     key: self.email,
+            _ = try await auth.signIn(withEmail: email,
+                                                   password: password)
+            try? keychain.saveItem(data: password.data(using: .utf8),
+                                                     key: email,
                                                      secClass: kSecClassGenericPassword)
             return true
         }
@@ -90,7 +89,7 @@ class AuthenticationViewModel: ObservableObject {
     
     private func signUpWithEmailPassword() async -> Bool {
         do  {
-            _ = try await dependencies.auth.createUser(withEmail: email, password: password)
+            _ = try await auth.createUser(withEmail: email, password: password)
             return true
         }
         catch {

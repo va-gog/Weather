@@ -23,14 +23,14 @@ struct WeatherDetailsView: View {
                     
                     ZStack {
                         VStack(spacing: presentationInfo.spacing) {
-                            if let topViewInfo = viewModel.topViewPresentationInfo(currentInfo: viewModel.currentInfo) {
+                            if let topViewInfo = viewModel.topViewPresentationInfo(currentInfo: viewModel.state.currentInfo) {
                                 TopWeatherView(info: topViewInfo,
                                                presentationInfo: TopWeatherViewPresentationInfo())
                             }
                             ScrollView(.horizontal, showsIndicators: false) {
                                 HStack {
-                                    ForEach(viewModel.forecastInfo.hourly.indices, id: \.self) { index in
-                                        if let currentInfo = viewModel.currentInfo,
+                                    ForEach(viewModel.state.forecastInfo.hourly.indices, id: \.self) { index in
+                                        if let currentInfo = viewModel.state.currentInfo,
                                            let hourlyViewPresentationInfo = viewModel.hourlyViewPresentationInfo(index: index, unit: currentInfo.unit) {
                                             HourlyForecastView(info: hourlyViewPresentationInfo,
                                                                presentationInfo: HourlyForecastViewPresentationInfo())
@@ -39,8 +39,8 @@ struct WeatherDetailsView: View {
                                 }
                             }
                             LazyVStack(alignment: .leading) {
-                                ForEach(viewModel.forecastInfo.daily.indices, id: \.self) { index in
-                                    if let currentInfo = viewModel.currentInfo,
+                                ForEach(viewModel.state.forecastInfo.daily.indices, id: \.self) { index in
+                                    if let currentInfo = viewModel.state.currentInfo,
                                        let dailyViewInfo = viewModel.dailyViewPresentationInfo(index: index,
                                                                                                unit: currentInfo.unit) {
                                         DailyForecastView(info: dailyViewInfo,
@@ -63,10 +63,10 @@ struct WeatherDetailsView: View {
             
             .onAppear {
                 Task {
-                    viewModel.fetchWeatherCurrentInfo()
+                    viewModel.send(WeatherDetailsViewIntent.fetchWeatherCurrentInfo)
                 }
                 Task {
-                    viewModel.fetchForecastInfo()
+                    viewModel.send(WeatherDetailsViewIntent.fetchForecastInfo)
                 }
             }
         }
@@ -74,7 +74,7 @@ struct WeatherDetailsView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: {
-                    viewModel.close()
+                    viewModel.send(WeatherDetailsViewIntent.close)
                 }) {
                     Text(LocalizedText.cancel)
                 }
@@ -83,7 +83,7 @@ struct WeatherDetailsView: View {
             if viewModel.style != .overlayAdded {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
-                        viewModel.addFavoriteWeather()
+                        viewModel.send(WeatherDetailsViewIntent.addFavoriteWeather)
                     }) {
                         Text(LocalizedText.add)
                     }
@@ -96,9 +96,9 @@ struct WeatherDetailsView: View {
         return ToolbarView(settings: ToolbarViewSettings(tabItems: viewModel.bottomToolbarTabs())) { tab in
             switch tab.title {
             case ForecastScreenToolbarTabType.remove.title:
-                viewModel.deleteButtonAction()
+                viewModel.send(WeatherDetailsViewIntent.deleteButtonAction)
             case ForecastScreenToolbarTabType.signOut.title:
-                try? viewModel.signedOut()
+                viewModel.send(WeatherDetailsViewIntent.signedOut)
             default:
                 assertionFailure("Action for tab item isn't implemented")
             }

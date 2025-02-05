@@ -7,14 +7,20 @@
 
 import SwiftUI
 
-protocol CoordinatorInterface {
-    var type: AppPages { get }
-    var parent: CoordinatorInterface? { get }
-    var childs: [CoordinatorInterface] { get }
-    var dependenciesManager: DependencyManagerInterface { get }
+protocol CoordinatorInterface: AnyObject {
+    var type: any AppScreen { get }
+    var parent: (any CoordinatorInterface)? { get }
+    var childs: [any CoordinatorInterface] { get }
     
-    func push(page: AppPages)
-    func pop(pages: [AppPages])
-    func build(screen: AppPages) -> AnyView?
+    func push(_ screen: any AppScreen)
+    func pop(_ screens: [any AppScreen])
+    func build(screen: any AppScreen) -> AnyView?
+    func send(action: Action)
+}
+
+extension CoordinatorInterface {
+    func push(_ screen: any AppScreen) {}
+    func pop(_ screens: [any AppScreen]) {}
+    func send(action: Action) {}
 }
 

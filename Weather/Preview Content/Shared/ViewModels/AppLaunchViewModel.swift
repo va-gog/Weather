@@ -11,40 +11,59 @@ import GoogleSignIn
 import GoogleSignInSwift
 import SwiftUI
 import Combine
+import CoreLocation
 
 final class AppLaunchViewModel: ObservableObject {
-    @Published var coordinator: CoordinatorInterface
+    @Published var coordinator: any CoordinatorInterface
     
-    private var dependencies: AppLaunchScreenDependenciesInterface
+    @Dependency private var locationService: LocationServiceInterface
+    @Dependency private var auth: AuthInterface
+    
     private var authStateHandler: AuthStateDidChangeListenerHandle?
     private var cancelable: AnyCancellable?
     
-    init(coordinator: CoordinatorInterface) {
+    init(coordinator: any CoordinatorInterface) {
         self.coordinator = coordinator
-        self.dependencies = coordinator.dependenciesManager.createAppLaunchScreenDependencies()
+        registerDependencies()
+    }
+    
+    private func registerDependencies() {
+        DependencyManager.register(LocationManagerInterface.self, factory: CLLocationManager())
+        DependencyManager.register(LocationServiceInterface.self, factory: LocationService())
+        DependencyManager.register(StorageInterface.self, factory: RealmWrapper())
+        DependencyManager.register(StorageServiceInterface.self, factory: StorageService())
+        DependencyManager.register(StorageManagerInterface.self, factory: StorageManager())
+        DependencyManager.register(AuthInterface.self, factory: AuthWrapper())
+        DependencyManager.register(URLSessionManagerProtocol.self, factory: URLSessionManager())
+        DependencyManager.register(NetworkServiceProtocol.self, factory: NetworkServiceProvider())
+        DependencyManager.register(BackgroundTasksManagerInterface.self, factory: BackgroundTasksManager())
+        DependencyManager.register(UserNotificationsFactoryInterface.self, factory: UserNotificationFactory())
+        DependencyManager.register(KeychainInterface.self, factory: KeychainAdapter())
+        DependencyManager.register(KeychainManagerInterface.self, factory: KeychainManager())
+        DependencyManager.register(WeatherInfoToPresentationInfoConverterInterface.self, factory: WeatherInfoToPresentationInfoConverter())
     }
 
     func registerAuthStateHandler() {
-        authStateHandler = dependencies.auth.addStateDidChangeListener(completion: { [weak self] auth, user in
+        authStateHandler = auth.addStateDidChangeListener(completion: { [weak self] auth, user in
             guard let self else { return }
             if user == nil {
-                self.coordinator.push(page: .authentication)
+                self.coordinator.push(WeatherAppScreen.authentication)
                 self.authStateHandler = nil
             } else {
-                switch dependencies.locationService.statusSubject.value {
+                switch locationService.statusSubject.value {
                 case .notDetermined:
-                    cancelable = dependencies.locationService.statusSubject
+                    cancelable = locationService.statusSubject
                         .dropFirst()
                         .sink { [weak self] status in
-                            status == .authorized ? self?.coordinator.push(page: .main) : self?.coordinator.push(page: .locationAccess)
+                            status == .authorized ? self?.coordinator.push(WeatherAppScreen.main) : self?.coordinator.push(WeatherAppScreen.locationAccess)
                                 self?.authStateHandler = nil
                     }
-                    dependencies.locationService.requestWhenInUseAuthorization()
+                    locationService.requestWhenInUseAuthorization()
                 case .authorized:
-                    coordinator.push(page: .main)
+                    coordinator.push(WeatherAppScreen.main)
                     authStateHandler = nil
                 case .denied:
-                    coordinator.push(page: .locationAccess)
+                    coordinator.push(WeatherAppScreen.locationAccess)
                     authStateHandler = nil
                 }
             }

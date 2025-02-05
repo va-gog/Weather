@@ -7,59 +7,34 @@
 
 import SwiftUI
 
-final class MainScreenCoordinator: MainScreenCoordinatorInterface {
-    var type: AppPages = .main
-    var parent: (CoordinatorInterface)?
-    var childs: [CoordinatorInterface] = []
-    var dependenciesManager: DependencyManagerInterface
+final class MainScreenCoordinator: CoordinatorInterface {
+    var type: any AppScreen = WeatherAppScreen.main
+    var parent: (any CoordinatorInterface)?
+    var childs: [any CoordinatorInterface] = []
     
     var mainScreenViewModel: MainScreenViewModel?
     
-    init(parent: CoordinatorInterface?,
-         dependenciesManager: DependencyManagerInterface,
+    init(parent: (any CoordinatorInterface)?,
          mainScreenViewModel: MainScreenViewModel? = nil) {
         self.parent = parent
         self.mainScreenViewModel = mainScreenViewModel
-        self.dependenciesManager = dependenciesManager
     }
 
-    func push(page: AppPages) {
-        parent?.push(page: page)
+    func push(_ screen: any AppScreen) {
+        parent?.push(screen)
     }
     
-    func pushForecastView(selectedCity: City, style: WeatherDetailsViewStyle, currentInfo: WeatherCurrentInfo?) {
-        let coordinator = ForecastScreenCoordinator(parent: self,
-                                                    dependenciesManager: dependenciesManager)
-        let viewModel = WeatherDetailsViewModel(selectedCity: selectedCity,
-                                                style: style,
-                                                coordinator: coordinator,
-                                                currentInfo: currentInfo)
-        coordinator.forecastScreenViewModel = viewModel
-        childs.append(coordinator)
-        
-        push(page: .forecast)
-    }
-
-    func pop(pages: [AppPages]) {
-        for page in pages {
-            if let index = childs.firstIndex(where: {$0.type == page } ) {
+    func pop(_ screens: [any AppScreen]) {
+        for screen in screens {
+            if let index = childs.firstIndex(where: { ($0.type as? WeatherAppScreen) == (screen as? WeatherAppScreen) }) {
                 childs.remove(at: index)
             }
         }
-        parent?.pop(pages: pages)
-    }
-    
-    func popForecastViewWhenDeleted(info: WeatherCurrentInfo?) {
-        guard let info else { return }
-        mainScreenViewModel?.deleteButtonPressed(info: info.currentWeather)
-    }
-    
-    func popForecastViewWhenAdded(info: WeatherCurrentInfo?) {
-        guard let info else { return }
-        mainScreenViewModel?.addButtonPressed(info: info)
+        parent?.pop(screens)
     }
 
-    func build(screen: AppPages) -> AnyView? {
+    func build(screen: any AppScreen) -> AnyView? {
+        guard let screen = screen as? WeatherAppScreen, let type = type as? WeatherAppScreen else { return nil }
         if screen == type {
             guard let mainScreenViewModel else { return nil }
             return AnyView(
@@ -75,7 +50,42 @@ final class MainScreenCoordinator: MainScreenCoordinatorInterface {
                 }
             }
             return nil
-            
         }
     }
+    
+    func send(_ action: Action) {
+        switch action as? MainScreenAction.Delegate {
+        case .popForecastViewWhenAdded(let info):
+            popForecastViewWhenAdded(info: info)
+        case .popForecastViewWhenDeleted(let info):
+            popForecastViewWhenDeleted(info: info)
+        case .pushForecastView(let city, let style, let info):
+            pushForecastView(selectedCity: city, style: style, currentInfo: info)
+        default:
+            break
+        }
+    }
+    
+    private func popForecastViewWhenDeleted(info: WeatherCurrentInfo?) {
+        guard let info else { return }
+        mainScreenViewModel?.send(MainScreenAction.deleteButtonPressed(info.currentWeather))
+    }
+    
+    private func popForecastViewWhenAdded(info: WeatherCurrentInfo?) {
+        guard let info else { return }
+        mainScreenViewModel?.send(MainScreenAction.addButtonPressed(info))
+    }
+    
+    private func pushForecastView(selectedCity: City, style: WeatherDetailsViewStyle, currentInfo: WeatherCurrentInfo?) {
+        let coordinator = ForecastScreenCoordinator(parent: self)
+        let viewModel = WeatherDetailsViewModel(selectedCity: selectedCity,
+                                                style: style,
+                                                coordinator: coordinator,
+                                                currentInfo: currentInfo)
+        coordinator.forecastScreenViewModel = viewModel
+        childs.append(coordinator)
+        
+        push(WeatherAppScreen.forecast)
+    }
+
 }

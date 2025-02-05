@@ -51,14 +51,14 @@ struct MainView: View {
             if searchText.isEmpty {
                 ScrollView {
                     LazyVStack(spacing: presentationInfo.interitemSapec) {
-                        ForEach(viewModel.weatherInfo) { info in
+                        ForEach(viewModel.state.weatherInfo) { info in
                             WeatherCardView(info: viewModel.weatherCardViewPresentationInfo(weatherInfo: info),
                                             presentationInfo: WeatherCardViewPresentationInfo())
                             .padding(.horizontal,
                                      presentationInfo.interitemSapec)
                             .onTapGesture {
                                 withAnimation {
-                                    viewModel.weatherSelected(with: info)
+                                    viewModel.send(MainScreenAction.weatherSelected(info))
                                 }
                             }
                         }
@@ -67,21 +67,21 @@ struct MainView: View {
                     .padding(.horizontal, presentationInfo.interitemSapec)
                 }
             } else {
-                if viewModel.searchState == .searching {
+                if viewModel.state.searchState == .searching {
                     LoadingView()
-                } else if viewModel.searchState == .failed || viewModel.searchState == .empty {
+                } else if viewModel.state.searchState == .failed || viewModel.state.searchState == .empty {
                     Spacer()
                     EmptyResultView(title: NSLocalizedString(LocalizedText.noResultTitle,
                                                        comment: ""),
                               subtitle: "\(LocalizedText.noResultSubtitle) '\(searchText)'",
                               presentationInfo: EmptyViewPresentationInfo())
                     Spacer()
-                } else if viewModel.searchState == .success {
-                    List(viewModel.searchResult, id: \.self) { city in
+                } else if viewModel.state.searchState == .success {
+                    List(viewModel.state.searchResult, id: \.self) { city in
                         Text("\(city.name), \(city.country ?? "")")
                             .onTapGesture {
                                 withAnimation {
-                                    viewModel.citySelected(city)
+                                    viewModel.send(MainScreenAction.citySelected(city))
                                 }
                             }
                     }
@@ -96,12 +96,13 @@ struct MainView: View {
                       scheduler: RunLoop.main)
             .removeDuplicates()
             .sink { searchTerm in
-                viewModel.searchWith(query: searchTerm)
+                viewModel.send(MainScreenAction.searchWith(searchTerm))
             }
         Task {
             if !hasAppearedOnce {
-                viewModel.requestNotificationPermission()
-                await viewModel.fetchWeatherInfo()
+                viewModel.send(MainScreenAction.requestNotificationPermission)
+                viewModel.send(MainScreenAction.fetchWeatherInfo)
+
                 hasAppearedOnce = true
             }
         }

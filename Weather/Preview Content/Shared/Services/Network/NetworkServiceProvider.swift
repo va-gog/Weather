@@ -9,11 +9,7 @@ import Foundation
 import Combine
 
 struct NetworkServiceProvider: NetworkServiceProtocol {    
-    private var sessionManager: URLSessionManagerProtocol
-    
-    init(sessionManager: URLSessionManagerProtocol = URLSessionManager()) {
-        self.sessionManager = sessionManager
-    }
+    @Dependency private var sessionManager: URLSessionManagerProtocol
     
     func requestJSON(_ request: NetworkRequest) -> AnyPublisher<Data, NetworkError> {
         guard let url = URL(string: request.path) else {

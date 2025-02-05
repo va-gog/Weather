@@ -12,10 +12,9 @@ final class LocationService: NSObject, CLLocationManagerDelegate, LocationServic
     var latestLocationObject = PassthroughSubject<CLLocation, LocationError>()
     var statusSubject = CurrentValueSubject<LocationAuthorizationStatus, Never>(LocationAuthorizationStatus.notDetermined)
     
-    private var manager: LocationManagerInterface
+    @Dependency private var manager: LocationManagerInterface
     
-    init(manager: LocationManagerInterface = CLLocationManager()) {
-        self.manager = manager
+    override init() {
         super.init()
         self.manager.delegate = self
         self.manager.desiredAccuracy = kCLLocationAccuracyBest

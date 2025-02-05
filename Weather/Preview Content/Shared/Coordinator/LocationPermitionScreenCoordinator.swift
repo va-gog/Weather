@@ -7,22 +7,12 @@
 
 import SwiftUI
 
-struct LocationPermitionScreenCoordinator: CoordinatorInterface {
-    var type: AppPages = .locationAccess
+final class LocationPermitionScreenCoordinator: CoordinatorInterface {
+    var type: any AppScreen = WeatherAppScreen.locationAccess
     var parent: (CoordinatorInterface)?
     var childs: [CoordinatorInterface] = []
-    
-    var dependenciesManager: DependencyManagerInterface
-    
-    init(dependenciesManager: DependencyManagerInterface) {
-        self.dependenciesManager = dependenciesManager
-    }
-    
-    func push(page: AppPages) {}
-    
-    func pop(pages: [AppPages]) {}
 
-    func build(screen: AppPages) -> AnyView? {
+    func build(screen: any AppScreen) -> AnyView? {
         AnyView(
             LocationPermitionView()
             .navigationBarBackButtonHidden(true)

@@ -7,55 +7,73 @@
 
 import SwiftUI
 
-final class ForecastScreenCoordinator: ForecastScreenCoordinatorInterface {
-    var type: AppPages = .forecast
-    var parent: (CoordinatorInterface)?
-    var childs: [CoordinatorInterface] = []
-    var dependenciesManager: DependencyManagerInterface
-    
+enum ForecastScreenAction: Action {
+    case closeWhenDeleted(WeatherCurrentInfo?)
+    case closeWhenAdded(WeatherCurrentInfo?)
+    case cancel
+    case signOut
+}
+
+final class ForecastScreenCoordinator: CoordinatorInterface {
+    var type: any AppScreen = WeatherAppScreen.forecast
+    var parent: (any CoordinatorInterface)?
+    var childs: [any CoordinatorInterface] = []
     var forecastScreenViewModel: WeatherDetailsViewModel?
     
-    init(parent: CoordinatorInterface?,
-         dependenciesManager: DependencyManagerInterface,
+    init(parent: (any CoordinatorInterface)?,
          forecastScreenViewModel: WeatherDetailsViewModel? = nil) {
         self.parent = parent
         self.forecastScreenViewModel = forecastScreenViewModel
-        self.dependenciesManager = dependenciesManager
     }
-
-    func push(page: AppPages) {}
+        
+    func send(_ action: Action) {
+        switch action as? ForecastScreenAction {
+        case .cancel:
+            cancel()
+        case .signOut:
+            signOut()
+        case .closeWhenDeleted(let info):
+            closeWhenDeleted(info: info)
+        case .closeWhenAdded(let info):
+            closeWhenAdded(info: info)
+        default:
+            break
+        }
+    }
     
-    func pop(pages: [AppPages]) {
-        parent?.pop(pages: pages)
+    func pop(_ screens: [any AppScreen]) {
+        parent?.pop(screens)
     }
     
     func cancel() {
-        pop(pages: [.forecast])
+        pop([WeatherAppScreen.forecast])
     }
     
-    func signOut() {
-        pop(pages: [.forecast, .main])
+    private func signOut() {
+        pop([WeatherAppScreen.forecast,
+             WeatherAppScreen.main])
     }
     
-    func closeWhenDeleted(info: WeatherCurrentInfo?) {
+    private func closeWhenDeleted(info: WeatherCurrentInfo?) {
         guard let parent = parent as? MainScreenCoordinator else { return }
-        parent.popForecastViewWhenDeleted(info: info)
-        pop(pages: [type])
+        parent.send(MainScreenAction.Delegate.popForecastViewWhenDeleted(info))
+        pop([type])
     }
     
-    func closeWhenAdded(info: WeatherCurrentInfo?) {
+    private func closeWhenAdded(info: WeatherCurrentInfo?) {
         guard let parent = parent as? MainScreenCoordinator else { return }
-        parent.popForecastViewWhenAdded(info: info)
-        pop(pages: [type])
+        parent.send(MainScreenAction.Delegate.popForecastViewWhenAdded(info))
+        pop([type])
     }
     
-    func build(screen: AppPages) -> AnyView? {
+    func build(screen: any AppScreen) -> AnyView? {
+        guard let screen = screen as? WeatherAppScreen, let type = type as? WeatherAppScreen else { return nil }
         if screen == type {
             guard let forecastScreenViewModel else { return nil }
-
+            
             return AnyView(
                 WeatherDetailsView()
-                .environmentObject(forecastScreenViewModel)
+                    .environmentObject(forecastScreenViewModel)
             )
         } else {
             for child in childs {
