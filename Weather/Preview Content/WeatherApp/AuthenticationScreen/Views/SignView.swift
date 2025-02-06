@@ -24,7 +24,7 @@ struct AuthenticationView: View {
 
     var body: some View {
         VStack {
-            Text(viewModel.flow.titile)
+            Text(viewModel.state.flow.titile)
                 .font(.largeTitle)
                 .fontWeight(.bold)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -32,7 +32,7 @@ struct AuthenticationView: View {
             HStack {
                 Image(systemName: AppIcons.email)
                 TextField(LocalizedText.email,
-                          text: $viewModel.email)
+                          text: $viewModel.state.email)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
                     .focused($focus, equals: .email)
@@ -42,8 +42,8 @@ struct AuthenticationView: View {
                     }
             }
             .onChange(of: focus) { _, isFocused in
-                if focus == .password, viewModel.flow == .login {
-                    viewModel.autofillPassword()
+                if focus == .password, viewModel.state.flow == .login {
+                    viewModel.send(AuthenticationViewAction.autofillPassword)
                 }
             }
             .padding(.vertical, 6)
@@ -54,7 +54,7 @@ struct AuthenticationView: View {
             HStack {
                 Image(systemName: AppIcons.lock)
                 SecureField(LocalizedText.password,
-                            text: $viewModel.password)
+                            text: $viewModel.state.password)
                     .focused($focus,
                              equals: .password)
                     .submitLabel(.next)
@@ -67,11 +67,11 @@ struct AuthenticationView: View {
                         alignment: .bottom)
             .padding(.bottom, 8)
             
-            if viewModel.flow == .signUp {
+            if viewModel.state.flow == .signUp {
                 HStack {
                     Image(systemName: AppIcons.lock)
                     SecureField(LocalizedText.confirmPassword,
-                                text: $viewModel.confirmPassword)
+                                text: $viewModel.state.confirmPassword)
                         .focused($focus,
                                  equals: .confirmPassword)
                         .submitLabel(.go)
@@ -86,16 +86,16 @@ struct AuthenticationView: View {
             }
             
             
-            if !viewModel.errorMessage.isEmpty {
+            if !viewModel.state.errorMessage.isEmpty {
                 VStack {
-                    Text(viewModel.errorMessage)
+                    Text(viewModel.state.errorMessage)
                         .foregroundColor(Color(UIColor.systemRed))
                 }
             }
             
             Button(action: signAction) {
-                if viewModel.authenticationState != .authenticating {
-                    Text(viewModel.flow.buttonTitle)
+                if viewModel.state.authenticationState != .authenticating {
+                    Text(viewModel.state.flow.buttonTitle)
                         .padding(.vertical, 8)
                         .frame(maxWidth: .infinity)
                 } else {
@@ -105,14 +105,16 @@ struct AuthenticationView: View {
                         .frame(maxWidth: .infinity)
                 }
             }
-            .disabled(!viewModel.isValid)
+            .disabled(!viewModel.state.isValid)
             .frame(maxWidth: .infinity)
             .buttonStyle(.borderedProminent)
             
             HStack {
-                Text(viewModel.flow.changeModeText)
-                Button(action: { viewModel.switchFlow() }) {
-                    Text(viewModel.flow.next.titile)
+                Text(viewModel.state.flow.changeModeText)
+                Button(action: {
+                    viewModel.send(AuthenticationViewAction.switchFlow)
+                }) {
+                    Text(viewModel.state.flow.next.titile)
                         .fontWeight(.semibold)
                         .foregroundColor(.blue)
                 }
@@ -125,9 +127,7 @@ struct AuthenticationView: View {
     }
     
     private func signAction() {
-        Task {            
-            await viewModel.signAction()
-        }
+        viewModel.send(AuthenticationViewAction.signAction)
     }
 }
 

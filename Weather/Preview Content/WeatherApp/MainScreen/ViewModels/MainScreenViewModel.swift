@@ -11,31 +11,6 @@ import RealmSwift
 import SwiftUI
 import FirebaseAuth
 
-enum MainScreenAction: Action {
-    enum Delegate: Action {
-        case pushForecastView(City, WeatherDetailsViewStyle, WeatherCurrentInfo?)
-        case popForecastViewWhenDeleted(WeatherCurrentInfo?)
-        case popForecastViewWhenAdded(WeatherCurrentInfo?)
-    }
-    
-    case weatherSelected(WeatherCurrentInfo)
-    case citySelected(City)
-    case deleteButtonPressed(CurrentWeather)
-    case addButtonPressed(WeatherCurrentInfo)
-    case searchWith(String)
-    case fetchWeatherInfo
-    case requestNotificationPermission
-}
-
-final class MainScreenState: ObservableObject, ReducerState {
-    @Published var searchState: SearchState?
-    @Published var searchResult: [City] = []
-    @Published var locationStatus: LocationAuthorizationStatus = .notDetermined
-    @Published var fetchState: FetchState = .none
-    @Published var weatherInfo: [WeatherCurrentInfo] = []
-    
-}
-
 final class MainScreenViewModel: Reducer, ObservableObject {
     typealias State = MainScreenState
     

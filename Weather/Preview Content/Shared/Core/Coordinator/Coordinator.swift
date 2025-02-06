@@ -5,69 +5,9 @@
 //  Created by Gohar Vardanyan on 08.11.24.
 //
 
-@propertyWrapper
-final class Dependency<T> {
-    private var resolvedDependency: T?
-    
-    public var wrappedValue: T {
-        get {
-            let dependency: T = resolvedDependency ?? DependencyManager.resolve()
-            resolvedDependency = dependency
-            return dependency
-        }
-        set {
-            resolvedDependency = newValue
-        }
-    }
-}
-
-extension Dependency {
-    public func injectMock(_ mock: T) {
-        self.resolvedDependency = mock
-    }
-}
-
-final class DependencyFactory<T, A> {
-
-    var factory: (A) -> T
-
-    init(_ factory: @escaping (A) -> T) {
-        self.factory = factory
-    }
-}
-
-final class DependencyManager {
-    private var factories: [String: AnyObject] = [:]
-    private var dependencies = [String: [AnyObject]]()
-    private static var shared = DependencyManager()
-    
-    static func removeAllDependencies() {
-        shared.dependencies.removeAll()
-    }
-    
-    static func register<T>(_ type: T.Type, factory: @autoclosure @escaping () -> T) {
-        let key = String(describing: T.self)
-        shared.factories[key] = DependencyFactory(factory) as AnyObject
-    }
-    
-    static func resolve<T>() -> T {
-        resolve(T.self)
-    }
-    
-    private static func resolve<T>(_ type: T.Type) -> T {
-        let key = String(describing: T.self)
-        guard let factory = shared.factories[key] as? DependencyFactory<T, Void> else {
-            fatalError("Resolve unregistered service: \(type)")
-        }
-        return factory.factory(())
-    }
-}
-
-
 import SwiftUI
 
 final class AppLaunchScreenCoordinator: CoordinatorInterface, ObservableObject {
-
     @Published var path: NavigationPath = NavigationPath()
     
     var type: any AppScreen = WeatherAppScreen.launch

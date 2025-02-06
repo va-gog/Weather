@@ -5,66 +5,79 @@
 //  Created by Gohar Vardanyan on 26.10.24.
 //
 
-import FirebaseCore
-import FirebaseAuth
-import GoogleSignIn
-import GoogleSignInSwift
 import SwiftUI
+import FirebaseAuth
+import GoogleSignInSwift
+import Combine
 
-class AuthenticationViewModel: ObservableObject {
-    @Published var email = ""
-    @Published var password = ""
-    @Published var confirmPassword = ""
-    @Published var flow: AuthenticationFlow = .login
-    @Published var isValid  = false
-    @Published var errorMessage = ""
-    @Published var user: User?
-    @Published var displayName: String = ""
-    @Published var authenticationState: AuthenticationState = .none
-    
+final class AuthenticationViewModel: ObservableObject, Reducer {
+    typealias State = AuthenticationViewState
+    var state = AuthenticationViewState()
     @Dependency private var keychain: KeychainManagerInterface
     @Dependency private var auth: AuthInterface
     
     private var authStateHandler: AuthStateDidChangeListenerHandle?
+    private var cancelables: [AnyCancellable] = []
     
     init() {
-        $flow
-            .combineLatest($email, $password, $confirmPassword)
-            .map { flow, email, password, confirmPassword in
-                flow == .login
-                ? !(email.isEmpty || password.isEmpty)
-                : !(email.isEmpty || password.isEmpty || confirmPassword.isEmpty)
-            }
-            .assign(to: &$isValid)
+        state.objectWillChange
+            .receive(on: RunLoop.main)
+            .sink(receiveValue: objectWillChange.send)
+            .store(in: &cancelables)
     }
     
+    func send(_ action: any Action) {
+        switch action as? AuthenticationViewAction {
+        case .autofillPassword:
+            autofillPassword()
+        case .switchFlow:
+            switchFlow()
+        case .reset:
+            reset()
+        case .signAction:
+            Task {
+                await signAction()
+            }
+        case .signInWithEmailPassword:
+            Task {
+                await signInWithEmailPassword()
+            }
+        case .signUpWithEmailPassword:
+            Task {
+            await signUpWithEmailPassword()
+            }
+        default:
+            break
+        }
+    }
     
-    func autofillPassword() {
+    private func autofillPassword() {
         do {
-            password = try keychain.retrieveItem(key: email,
+            state.password = try keychain.retrieveItem(key: state.email,
                                                               secClass: kSecClassGenericPassword)
         } catch {
-            password = ""
+            state.password = ""
         }
     }
     
-    func switchFlow() {
-        flow = flow == .login ? .signUp : .login
-        errorMessage = ""
+    private func switchFlow() {
+        state.flow = state.flow == .login ? .signUp : .login
+        state.errorMessage = ""
     }
     
-    func reset() {
-        flow = .login
-        email = ""
-        password = ""
-        confirmPassword = ""
+    private func reset() {
+        state.flow = .login
+        state.email = ""
+        state.password = ""
+        state.confirmPassword = ""
     }
     
-    func signAction() async -> Bool {
+    @MainActor
+    private func signAction() async  {
         Task { @MainActor in
-            authenticationState = .authenticating
+            state.authenticationState = .authenticating
         }
-        return switch flow {
+        return switch state.flow {
         case .login:
             await signInWithEmailPassword()
         case .signUp:
@@ -72,29 +85,28 @@ class AuthenticationViewModel: ObservableObject {
         }
     }
     
-    private func signInWithEmailPassword() async -> Bool {
+    @MainActor
+    private func signInWithEmailPassword() async {
         do {
-            _ = try await auth.signIn(withEmail: email,
-                                                   password: password)
-            try? keychain.saveItem(data: password.data(using: .utf8),
-                                                     key: email,
+            _ = try await auth.signIn(withEmail: state.email,
+                                      password: state.password)
+            try? keychain.saveItem(data: state.password.data(using: .utf8),
+                                   key: state.email,
                                                      secClass: kSecClassGenericPassword)
-            return true
         }
         catch  {
-            errorMessage = error.localizedDescription
-            return false
+            state.errorMessage = error.localizedDescription
         }
     }
     
-    private func signUpWithEmailPassword() async -> Bool {
+    @MainActor
+    private func signUpWithEmailPassword() async {
         do  {
-            _ = try await auth.createUser(withEmail: email, password: password)
-            return true
+            _ = try await auth.createUser(withEmail: state.email,
+                                          password: state.password)
         }
         catch {
-            errorMessage = error.localizedDescription
-            return false
+            state.errorMessage = error.localizedDescription
         }
     }
 }

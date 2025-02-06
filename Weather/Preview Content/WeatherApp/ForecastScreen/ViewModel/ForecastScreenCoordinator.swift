@@ -7,13 +7,6 @@
 
 import SwiftUI
 
-enum ForecastScreenAction: Action {
-    case closeWhenDeleted(WeatherCurrentInfo?)
-    case closeWhenAdded(WeatherCurrentInfo?)
-    case cancel
-    case signOut
-}
-
 final class ForecastScreenCoordinator: CoordinatorInterface {
     var type: any AppScreen = WeatherAppScreen.forecast
     var parent: (any CoordinatorInterface)?
@@ -26,8 +19,8 @@ final class ForecastScreenCoordinator: CoordinatorInterface {
         self.forecastScreenViewModel = forecastScreenViewModel
     }
         
-    func send(_ action: Action) {
-        switch action as? ForecastScreenAction {
+    func send(action: Action) {
+        switch action as? WeatherDetailsViewAction.Delegate {
         case .cancel:
             cancel()
         case .signOut:
@@ -43,27 +36,6 @@ final class ForecastScreenCoordinator: CoordinatorInterface {
     
     func pop(_ screens: [any AppScreen]) {
         parent?.pop(screens)
-    }
-    
-    func cancel() {
-        pop([WeatherAppScreen.forecast])
-    }
-    
-    private func signOut() {
-        pop([WeatherAppScreen.forecast,
-             WeatherAppScreen.main])
-    }
-    
-    private func closeWhenDeleted(info: WeatherCurrentInfo?) {
-        guard let parent = parent as? MainScreenCoordinator else { return }
-        parent.send(MainScreenAction.Delegate.popForecastViewWhenDeleted(info))
-        pop([type])
-    }
-    
-    private func closeWhenAdded(info: WeatherCurrentInfo?) {
-        guard let parent = parent as? MainScreenCoordinator else { return }
-        parent.send(MainScreenAction.Delegate.popForecastViewWhenAdded(info))
-        pop([type])
     }
     
     func build(screen: any AppScreen) -> AnyView? {
@@ -84,5 +56,26 @@ final class ForecastScreenCoordinator: CoordinatorInterface {
             return nil
             
         }
+    }
+    
+    private func cancel() {
+        pop([WeatherAppScreen.forecast])
+    }
+    
+    private func signOut() {
+        pop([WeatherAppScreen.forecast,
+             WeatherAppScreen.main])
+    }
+    
+    private func closeWhenDeleted(info: WeatherCurrentInfo?) {
+        guard let parent = parent as? MainScreenCoordinator else { return }
+        parent.send(action: MainScreenAction.Delegate.popForecastViewWhenDeleted(info))
+        pop([type])
+    }
+    
+    private func closeWhenAdded(info: WeatherCurrentInfo?) {
+        guard let parent = parent as? MainScreenCoordinator else { return }
+        parent.send(action: MainScreenAction.Delegate.popForecastViewWhenAdded(info))
+        pop([type])
     }
 }

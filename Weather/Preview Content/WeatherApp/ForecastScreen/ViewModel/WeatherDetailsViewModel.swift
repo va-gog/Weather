@@ -15,7 +15,14 @@ final class WeatherDetailsState: ObservableObject, ReducerState {
     @Published var fetchState: FetchState = .none
 }
 
-enum WeatherDetailsViewIntent: Action {
+enum WeatherDetailsViewAction: Action {
+    enum Delegate: Action {
+        case closeWhenDeleted(WeatherCurrentInfo?)
+        case closeWhenAdded(WeatherCurrentInfo?)
+        case cancel
+        case signOut
+    }
+    
     case deleteButtonAction
     case addFavoriteWeather
     case signedOut
@@ -44,11 +51,11 @@ final class WeatherDetailsViewModel: Reducer, ObservableObject {
     @Dependency private var auth: AuthInterface
     @Dependency private var infoConverter: WeatherInfoToPresentationInfoConverterInterface
     
+    private weak var coordinator: CoordinatorInterface?
     private(set) var style: WeatherDetailsViewStyle
     private var selectedCity: City
-    private weak var coordinator: CoordinatorInterface?
-    private var cancelables: [AnyCancellable] = []
     private var unit = WeatherUnit.celsius
+    private var cancelables: [AnyCancellable] = []
     
     init(selectedCity: City,
          style: WeatherDetailsViewStyle,
@@ -66,7 +73,7 @@ final class WeatherDetailsViewModel: Reducer, ObservableObject {
     }
     
     func send(_ action: Action) {
-        switch action as? WeatherDetailsViewIntent {
+        switch action as? WeatherDetailsViewAction {
         case .addFavoriteWeather:
             addFavoriteWeather()
         case .deleteButtonAction:
@@ -86,19 +93,19 @@ final class WeatherDetailsViewModel: Reducer, ObservableObject {
     
     private func addFavoriteWeather() {
         Task { @MainActor in
-            coordinator?.send(action: ForecastScreenAction.closeWhenAdded(state.currentInfo))
+            coordinator?.send(action: WeatherDetailsViewAction.Delegate.closeWhenAdded(state.currentInfo))
         }
     }
     
     private func deleteButtonAction() {
         Task { @MainActor in
-            coordinator?.send(action: ForecastScreenAction.closeWhenDeleted(state.currentInfo))
+            coordinator?.send(action: WeatherDetailsViewAction.Delegate.closeWhenDeleted(state.currentInfo))
         }
     }
     
     private func signedOut() throws {
         do {
-            coordinator?.send(action: ForecastScreenAction.signOut)
+            coordinator?.send(action: WeatherDetailsViewAction.Delegate.signOut)
             try auth.signOut()
         } catch {
             throw AppError.signOutFail
@@ -107,7 +114,7 @@ final class WeatherDetailsViewModel: Reducer, ObservableObject {
     
     private func close() {
         Task { @MainActor in
-            coordinator?.send(action: ForecastScreenAction.cancel)
+            coordinator?.send(action: WeatherDetailsViewAction.Delegate.cancel)
         }
     }
     

@@ -63,10 +63,10 @@ struct WeatherDetailsView: View {
             
             .onAppear {
                 Task {
-                    viewModel.send(WeatherDetailsViewIntent.fetchWeatherCurrentInfo)
+                    viewModel.send(WeatherDetailsViewAction.fetchWeatherCurrentInfo)
                 }
                 Task {
-                    viewModel.send(WeatherDetailsViewIntent.fetchForecastInfo)
+                    viewModel.send(WeatherDetailsViewAction.fetchForecastInfo)
                 }
             }
         }
@@ -74,7 +74,7 @@ struct WeatherDetailsView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: {
-                    viewModel.send(WeatherDetailsViewIntent.close)
+                    viewModel.send(WeatherDetailsViewAction.close)
                 }) {
                     Text(LocalizedText.cancel)
                 }
@@ -83,7 +83,7 @@ struct WeatherDetailsView: View {
             if viewModel.style != .overlayAdded {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
-                        viewModel.send(WeatherDetailsViewIntent.addFavoriteWeather)
+                        viewModel.send(WeatherDetailsViewAction.addFavoriteWeather)
                     }) {
                         Text(LocalizedText.add)
                     }
@@ -96,9 +96,9 @@ struct WeatherDetailsView: View {
         return ToolbarView(settings: ToolbarViewSettings(tabItems: viewModel.bottomToolbarTabs())) { tab in
             switch tab.title {
             case ForecastScreenToolbarTabType.remove.title:
-                viewModel.send(WeatherDetailsViewIntent.deleteButtonAction)
+                viewModel.send(WeatherDetailsViewAction.deleteButtonAction)
             case ForecastScreenToolbarTabType.signOut.title:
-                viewModel.send(WeatherDetailsViewIntent.signedOut)
+                viewModel.send(WeatherDetailsViewAction.signedOut)
             default:
                 assertionFailure("Action for tab item isn't implemented")
             }

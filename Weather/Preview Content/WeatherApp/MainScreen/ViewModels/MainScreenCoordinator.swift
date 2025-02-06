@@ -53,7 +53,7 @@ final class MainScreenCoordinator: CoordinatorInterface {
         }
     }
     
-    func send(_ action: Action) {
+    func send(action: Action) {
         switch action as? MainScreenAction.Delegate {
         case .popForecastViewWhenAdded(let info):
             popForecastViewWhenAdded(info: info)
