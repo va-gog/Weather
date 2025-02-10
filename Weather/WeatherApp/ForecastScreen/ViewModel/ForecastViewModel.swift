@@ -9,43 +9,11 @@ import Combine
 import CoreLocation
 import SwiftUI
 
-final class WeatherDetailsState: ObservableObject, ReducerState {
-    @Published var currentInfo: WeatherCurrentInfo?
-    @Published var forecastInfo = WeatherForecast(hourly: [], daily: [])
-    @Published var fetchState: FetchState = .none
-}
-
-enum WeatherDetailsViewAction: Action {
-    enum Delegate: Action {
-        case closeWhenDeleted(WeatherCurrentInfo?)
-        case closeWhenAdded(WeatherCurrentInfo?)
-        case cancel
-        case signOut
-    }
+final class ForecastViewModel: Reducer, ObservableObject {
+    typealias State = ForecastViewState
     
-    case deleteButtonAction
-    case addFavoriteWeather
-    case signedOut
-    case close
-    case fetchForecastInfo
-    case fetchWeatherCurrentInfo
-}
-
-protocol ReducerState {}
-protocol Action { }
-
-protocol Reducer {
-    associatedtype State: ReducerState
-    
-    var state: State { get }
-    
-    func send(_ action: Action)
-}
-
-final class WeatherDetailsViewModel: Reducer, ObservableObject {
-    typealias State = WeatherDetailsState
-    
-    var state = WeatherDetailsState()
+    var state = ForecastViewState()
+    var cancelables: [AnyCancellable] = []
     
     @Dependency private var networkService: NetworkServiceProtocol
     @Dependency private var auth: AuthInterface
@@ -55,7 +23,6 @@ final class WeatherDetailsViewModel: Reducer, ObservableObject {
     private(set) var style: WeatherDetailsViewStyle
     private var selectedCity: City
     private var unit = WeatherUnit.celsius
-    private var cancelables: [AnyCancellable] = []
     
     init(selectedCity: City,
          style: WeatherDetailsViewStyle,
@@ -66,14 +33,11 @@ final class WeatherDetailsViewModel: Reducer, ObservableObject {
         self.coordinator = coordinator
         self.state.currentInfo = currentInfo
         
-        state.objectWillChange
-            .receive(on: RunLoop.main)
-            .sink(receiveValue: objectWillChange.send)
-            .store(in: &cancelables)
+        observableReducer()
     }
     
     func send(_ action: Action) {
-        switch action as? WeatherDetailsViewAction {
+        switch action as? ForecastViewAction {
         case .addFavoriteWeather:
             addFavoriteWeather()
         case .deleteButtonAction:
@@ -93,19 +57,19 @@ final class WeatherDetailsViewModel: Reducer, ObservableObject {
     
     private func addFavoriteWeather() {
         Task { @MainActor in
-            coordinator?.send(action: WeatherDetailsViewAction.Delegate.closeWhenAdded(state.currentInfo))
+            coordinator?.send(action: ForecastViewAction.Delegate.closeWhenAdded(state.currentInfo))
         }
     }
     
     private func deleteButtonAction() {
         Task { @MainActor in
-            coordinator?.send(action: WeatherDetailsViewAction.Delegate.closeWhenDeleted(state.currentInfo))
+            coordinator?.send(action: ForecastViewAction.Delegate.closeWhenDeleted(state.currentInfo))
         }
     }
     
     private func signedOut() throws {
         do {
-            coordinator?.send(action: WeatherDetailsViewAction.Delegate.signOut)
+            coordinator?.send(action: ForecastViewAction.Delegate.signOut)
             try auth.signOut()
         } catch {
             throw AppError.signOutFail
@@ -114,7 +78,7 @@ final class WeatherDetailsViewModel: Reducer, ObservableObject {
     
     private func close() {
         Task { @MainActor in
-            coordinator?.send(action: WeatherDetailsViewAction.Delegate.cancel)
+            coordinator?.send(action: ForecastViewAction.Delegate.cancel)
         }
     }
     

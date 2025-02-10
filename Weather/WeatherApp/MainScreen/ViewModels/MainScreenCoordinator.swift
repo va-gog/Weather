@@ -78,7 +78,7 @@ final class MainScreenCoordinator: CoordinatorInterface {
     
     private func pushForecastView(selectedCity: City, style: WeatherDetailsViewStyle, currentInfo: WeatherCurrentInfo?) {
         let coordinator = ForecastScreenCoordinator(parent: self)
-        let viewModel = WeatherDetailsViewModel(selectedCity: selectedCity,
+        let viewModel = ForecastViewModel(selectedCity: selectedCity,
                                                 style: style,
                                                 coordinator: coordinator,
                                                 currentInfo: currentInfo)

@@ -11,16 +11,16 @@ final class ForecastScreenCoordinator: CoordinatorInterface {
     var type: any AppScreen = WeatherAppScreen.forecast
     var parent: (any CoordinatorInterface)?
     var childs: [any CoordinatorInterface] = []
-    var forecastScreenViewModel: WeatherDetailsViewModel?
+    var forecastScreenViewModel: ForecastViewModel?
     
     init(parent: (any CoordinatorInterface)?,
-         forecastScreenViewModel: WeatherDetailsViewModel? = nil) {
+         forecastScreenViewModel: ForecastViewModel? = nil) {
         self.parent = parent
         self.forecastScreenViewModel = forecastScreenViewModel
     }
         
     func send(action: Action) {
-        switch action as? WeatherDetailsViewAction.Delegate {
+        switch action as? ForecastViewAction.Delegate {
         case .cancel:
             cancel()
         case .signOut:

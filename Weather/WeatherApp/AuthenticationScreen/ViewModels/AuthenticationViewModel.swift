@@ -12,18 +12,17 @@ import Combine
 
 final class AuthenticationViewModel: ObservableObject, Reducer {
     typealias State = AuthenticationViewState
+    
     var state = AuthenticationViewState()
+    var cancelables: [AnyCancellable] = []
+    
     @Dependency private var keychain: KeychainManagerInterface
     @Dependency private var auth: AuthInterface
     
     private var authStateHandler: AuthStateDidChangeListenerHandle?
-    private var cancelables: [AnyCancellable] = []
     
     init() {
-        state.objectWillChange
-            .receive(on: RunLoop.main)
-            .sink(receiveValue: objectWillChange.send)
-            .store(in: &cancelables)
+        observableReducer()
     }
     
     func send(_ action: any Action) {

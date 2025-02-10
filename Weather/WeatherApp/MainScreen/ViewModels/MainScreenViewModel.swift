@@ -15,27 +15,24 @@ final class MainScreenViewModel: Reducer, ObservableObject {
     typealias State = MainScreenState
     
     var state: MainScreenState = MainScreenState()
-    
+    var cancelables: [AnyCancellable] = []
+
     @Dependency private var locationService: LocationServiceInterface
     @Dependency private var storageManager: StorageManagerInterface
     @Dependency private var networkService: NetworkServiceProtocol
     @Dependency private var auth: AuthInterface
     
     private var coordinator: (any CoordinatorInterface)?
-    private var cancelables: [AnyCancellable] = []
     
     init(coordinator: any CoordinatorInterface) {
         self.coordinator = coordinator
-        
+        observableReducer()
+
         locationService.statusSubject
             .receive(on: RunLoop.main)
             .sink { [weak self] status in
                 self?.state.locationStatus = status
             }
-            .store(in: &cancelables)
-        state.objectWillChange
-            .receive(on: RunLoop.main)
-            .sink(receiveValue: objectWillChange.send)
             .store(in: &cancelables)
     }
     

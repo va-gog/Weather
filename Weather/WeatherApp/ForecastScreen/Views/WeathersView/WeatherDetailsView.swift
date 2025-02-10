@@ -9,7 +9,7 @@ import SwiftUI
 import Combine
 
 struct WeatherDetailsView: View {
-    @EnvironmentObject var viewModel: WeatherDetailsViewModel
+    @EnvironmentObject var viewModel: ForecastViewModel
     
     var presentationInfo = WeatherDetailsViewPresentationInfo()
     
@@ -63,10 +63,10 @@ struct WeatherDetailsView: View {
             
             .onAppear {
                 Task {
-                    viewModel.send(WeatherDetailsViewAction.fetchWeatherCurrentInfo)
+                    viewModel.send(ForecastViewAction.fetchWeatherCurrentInfo)
                 }
                 Task {
-                    viewModel.send(WeatherDetailsViewAction.fetchForecastInfo)
+                    viewModel.send(ForecastViewAction.fetchForecastInfo)
                 }
             }
         }
@@ -74,7 +74,7 @@ struct WeatherDetailsView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: {
-                    viewModel.send(WeatherDetailsViewAction.close)
+                    viewModel.send(ForecastViewAction.close)
                 }) {
                     Text(LocalizedText.cancel)
                 }
@@ -83,7 +83,7 @@ struct WeatherDetailsView: View {
             if viewModel.style != .overlayAdded {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
-                        viewModel.send(WeatherDetailsViewAction.addFavoriteWeather)
+                        viewModel.send(ForecastViewAction.addFavoriteWeather)
                     }) {
                         Text(LocalizedText.add)
                     }
@@ -96,9 +96,9 @@ struct WeatherDetailsView: View {
         return ToolbarView(settings: ToolbarViewSettings(tabItems: viewModel.bottomToolbarTabs())) { tab in
             switch tab.title {
             case ForecastScreenToolbarTabType.remove.title:
-                viewModel.send(WeatherDetailsViewAction.deleteButtonAction)
+                viewModel.send(ForecastViewAction.deleteButtonAction)
             case ForecastScreenToolbarTabType.signOut.title:
-                viewModel.send(WeatherDetailsViewAction.signedOut)
+                viewModel.send(ForecastViewAction.signedOut)
             default:
                 assertionFailure("Action for tab item isn't implemented")
             }
