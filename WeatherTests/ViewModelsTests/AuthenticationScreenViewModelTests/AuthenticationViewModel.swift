@@ -13,7 +13,6 @@ import SwiftUI
 @MainActor
 final class AuthenticationViewModelTests: XCTestCase {
     private var viewModel: AuthenticationViewModel!
-    private var dependenciesManager: MockDependencyManager!
     private var mockAuth: MockAuth!
     private var mockKeychain: MockKeychainManager!
     private var cancellables: Set<AnyCancellable>!
@@ -22,9 +21,7 @@ final class AuthenticationViewModelTests: XCTestCase {
         super.setUp()
         mockAuth = MockAuth()
         mockKeychain = MockKeychainManager()
-        dependenciesManager = MockDependencyManager(auth: mockAuth,
-                                                    keychain: mockKeychain)
-        viewModel = AuthenticationViewModel(dependenciesManager: dependenciesManager)
+        viewModel = AuthenticationViewModel(keychain: mockKeychain, auth: mockAuth)
         cancellables = []
     }
     
@@ -37,37 +34,37 @@ final class AuthenticationViewModelTests: XCTestCase {
     }
     
     func testSwitchFlow() {
-        viewModel.switchFlow()
-        XCTAssertEqual(viewModel.flow, .signUp)
+        viewModel.send(AuthenticationViewAction.switchFlow)
+        XCTAssertEqual(viewModel.state.flow, .signUp)
         
-        viewModel.switchFlow()
-        XCTAssertEqual(viewModel.flow, .login)
+        viewModel.send(AuthenticationViewAction.switchFlow)
+        XCTAssertEqual(viewModel.state.flow, .login)
     }
     
     func testAutofillPasswordFail() {
-        viewModel.password = "Test"
+        viewModel.state.password = "Test"
         
         let expectation = XCTestExpectation(description: "Successful search")
-        viewModel.$password
+        viewModel.state.$password
             .dropFirst()
             .sink { password in
             XCTAssertEqual(password, "")
             expectation.fulfill()
         }
         .store(in: &cancellables)
-        viewModel.autofillPassword()
+        viewModel.send(AuthenticationViewAction.autofillPassword)
         wait(for: [expectation], timeout: 1.0)
 
     }
     
     func testAutofillPasswordSuccess() {
-        viewModel.password = "Test"
+        viewModel.state.password = "Test"
         
         let expectation = XCTestExpectation(description: "Successful search")
         let expectedResult = "Password"
         mockKeychain.password = expectedResult
         
-        viewModel.$password
+        viewModel.state.$password
             .dropFirst()
             .sink { password in
             XCTAssertEqual(password, expectedResult)
@@ -75,68 +72,68 @@ final class AuthenticationViewModelTests: XCTestCase {
 
         }
         .store(in: &cancellables)
-        viewModel.autofillPassword()
+        viewModel.send(AuthenticationViewAction.autofillPassword)
         wait(for: [expectation], timeout: 1.0)
     }
     
     func testReset() {
-        viewModel.email = "test@example.com"
-        viewModel.password = "password"
-        viewModel.confirmPassword = "password"
+        viewModel.state.email = "test@example.com"
+        viewModel.state.password = "password"
+        viewModel.state.confirmPassword = "password"
         
-        viewModel.reset()
+        viewModel.send(AuthenticationViewAction.reset)
         
-        XCTAssertEqual(viewModel.flow, .login)
-        XCTAssertEqual(viewModel.email, "")
-        XCTAssertEqual(viewModel.password, "")
-        XCTAssertEqual(viewModel.confirmPassword, "")
+        XCTAssertEqual(viewModel.state.flow, .login)
+        XCTAssertEqual(viewModel.state.email, "")
+        XCTAssertEqual(viewModel.state.password, "")
+        XCTAssertEqual(viewModel.state.confirmPassword, "")
     }
     
     func testIsValidLoginFlow() {
-        viewModel.flow = .login
-        viewModel.email = "test@example.com"
-        viewModel.password = "password"
-        XCTAssertTrue(viewModel.isValid)
+        viewModel.state.flow = .login
+        viewModel.state.email = "test@example.com"
+        viewModel.state.password = "password"
+        XCTAssertTrue(viewModel.state.isValid)
         
-        viewModel.email = ""
-        viewModel.password = "password"
-        XCTAssertFalse(viewModel.isValid)
+        viewModel.state.email = ""
+        viewModel.state.password = "password"
+        XCTAssertFalse(viewModel.state.isValid)
         
-        viewModel.email = "test@example.com"
-        viewModel.password = ""
-        XCTAssertFalse(viewModel.isValid)
+        viewModel.state.email = "test@example.com"
+        viewModel.state.password = ""
+        XCTAssertFalse(viewModel.state.isValid)
     }
     
     func testIsValidSignUpFlow() {
-        viewModel.flow = .signUp
-        viewModel.email = "test@example.com"
-        viewModel.password = "password"
-        viewModel.confirmPassword = "password"
-        XCTAssertTrue(viewModel.isValid)
+        viewModel.state.flow = .signUp
+        viewModel.state.email = "test@example.com"
+        viewModel.state.password = "password"
+        viewModel.state.confirmPassword = "password"
+        XCTAssertTrue(viewModel.state.isValid)
         
-        viewModel.email = ""
-        viewModel.password = "password"
-        viewModel.confirmPassword = "password"
-        XCTAssertFalse(viewModel.isValid)
+        viewModel.state.email = ""
+        viewModel.state.password = "password"
+        viewModel.state.confirmPassword = "password"
+        XCTAssertFalse(viewModel.state.isValid)
         
-        viewModel.email = "test@example.com"
-        viewModel.password = ""
-        viewModel.confirmPassword = "password"
-        XCTAssertFalse(viewModel.isValid)
+        viewModel.state.email = "test@example.com"
+        viewModel.state.password = ""
+        viewModel.state.confirmPassword = "password"
+        XCTAssertFalse(viewModel.state.isValid)
 
-        viewModel.email = "test@example.com"
-        viewModel.password = "password"
-        viewModel.confirmPassword = ""
-        XCTAssertFalse(viewModel.isValid)
+        viewModel.state.email = "test@example.com"
+        viewModel.state.password = "password"
+        viewModel.state.confirmPassword = ""
+        XCTAssertFalse(viewModel.state.isValid)
     }
     
     func testLoginFlowIsValidWhenEmailAndPasswordAreNonEmpty() {
-           viewModel.email = "test@example.com"
-           viewModel.password = "password123"
+           viewModel.state.email = "test@example.com"
+           viewModel.state.password = "password123"
            
            let expectation = XCTestExpectation(description: "isValid should be true")
            
-           viewModel.$isValid
+           viewModel.state.$isValid
                .sink { isValid in
                    if isValid {
                        XCTAssertTrue(isValid)
@@ -144,17 +141,17 @@ final class AuthenticationViewModelTests: XCTestCase {
                    }
                }
                .store(in: &cancellables)
-           viewModel.flow = .login
+           viewModel.state.flow = .login
            wait(for: [expectation], timeout: 1)
        }
        
        func testLoginFlowIsNotValidWhenEmailIsEmpty() {
-           viewModel.email = ""
-           viewModel.password = "password123"
+           viewModel.state.email = ""
+           viewModel.state.password = "password123"
            
            let expectation = XCTestExpectation(description: "isValid should be false")
            
-           viewModel.$isValid
+           viewModel.state.$isValid
                .sink { isValid in
                    if !isValid {
                        XCTAssertFalse(isValid)
@@ -162,48 +159,58 @@ final class AuthenticationViewModelTests: XCTestCase {
                    }
                }
                .store(in: &cancellables)
-           viewModel.flow = .login
+           viewModel.state.flow = .login
            wait(for: [expectation], timeout: 1)
        }
     
-    func testSignInWithEmailPassword_Success() async {
+    func testSignInWithEmailPassword_Success() {
         let expectedMail = "test@example.com"
         let expectedPass = "password"
         mockAuth.user = MockUser(uid: "user")
-        viewModel.email = expectedMail
-        viewModel.password = expectedPass
-        viewModel.flow = .login
-        let result = await viewModel.signAction()
-        
-        XCTAssertTrue(result)
-        XCTAssertEqual(mockKeychain.email, expectedMail)
-        XCTAssertEqual(mockKeychain.password, expectedPass)
-        XCTAssertEqual(mockKeychain.secClass, kSecClassGenericPassword)
+        viewModel.state.email = expectedMail
+        viewModel.state.password = expectedPass
+        viewModel.state.flow = .login
+        viewModel.send(AuthenticationViewAction.signAction)
+        let expectation = XCTestExpectation(description: "Start location updates")
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            XCTAssertTrue(self.mockAuth.signedInSucceed)
+            XCTAssertEqual(self.mockKeychain.email, expectedMail)
+            XCTAssertEqual(self.mockKeychain.password, expectedPass)
+            XCTAssertEqual(self.mockKeychain.secClass, kSecClassGenericPassword)
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 1.0)
+
     }
     
-    func testSignInWithEmailPassword_Failure() async {
+    func testSignInWithEmailPassword_Failure() {
         mockAuth.user = nil
-        viewModel.flow = .login
+        viewModel.state.flow = .login
 
-        let result = await viewModel.signAction()
-        
-        XCTAssertFalse(result)
+        viewModel.send(AuthenticationViewAction.signAction)
+
+        XCTAssertFalse(mockAuth.signedInSucceed)
     }
     
-    func testSignUpWithEmailPassword_Success() async {
+    func testSignUpWithEmailPassword_Success() {
         mockAuth.user = MockUser(uid: "User")
-        viewModel.flow = .signUp
+        viewModel.state.flow = .signUp
+        let expectation = XCTestExpectation(description: "Start location updates")
 
-        let result = await viewModel.signAction()
-        
-        XCTAssertTrue(result)
+        viewModel.send(AuthenticationViewAction.signAction)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            XCTAssertTrue(self.mockAuth.signedInSucceed)
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 1.0)
     }
     
     func testSignUpWithEmailPassword_Failure() async {
-        viewModel.flow = .signUp
+        viewModel.state.flow = .signUp
         
-        let result = await viewModel.signAction()
+        viewModel.send(AuthenticationViewAction.signAction)
 
-        XCTAssertFalse(result)
+        XCTAssertFalse(mockAuth.signedInSucceed)
     }
 }

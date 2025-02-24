@@ -6,7 +6,7 @@
 //
 import Foundation
 
-struct WeatherCurrentInfo: Identifiable {
+struct WeatherCurrentInfo: Identifiable, Equatable {
     var id = UUID()
     var currentWeather: CurrentWeather
     var unit: WeatherUnit = .celsius

@@ -6,7 +6,7 @@
 //
 
 
-protocol AppScreen: Hashable { }
+protocol AppScreen: Hashable, Equatable { }
 
 enum WeatherAppScreen: AppScreen {
     case launch

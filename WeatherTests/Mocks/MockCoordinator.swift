@@ -8,27 +8,33 @@
 @testable import Weather
 import SwiftUI
 
-final class MockCoordinator: CoordinatorInterface {
-    var dependenciesManager: DependencyManagerInterface
-    var type: AppPages
-    var parent: CoordinatorInterface?
-    var childs: [CoordinatorInterface] = []
-    var pushedPage: AppPages?
-    var popedPages: [AppPages] = []
-    
-    init(type: AppPages, dependenciesManager: DependencyManagerInterface) {
+final class MockCoordinator: CoordinatorInterface {    
+    var type: any AppScreen
+    var parent: (any CoordinatorInterface)?
+    var childs: [any CoordinatorInterface] = []
+    var pushedPages: [any AppScreen] = []
+    var popedPages: [any AppScreen] = []
+    var reducer: (any Reducer)?
+    var action: (any Action)?
+
+    init(type: any AppScreen) {
         self.type = type
-        self.dependenciesManager = dependenciesManager
     }
     
-    func push(page: AppPages) {
-        pushedPage = page
-    }
-    func pop(pages: [AppPages]) {
-        popedPages = pages
+    func push(_ screen: any AppScreen) {
+        pushedPages.append(screen)
     }
     
-    func build(screen: AppPages) -> AnyView? {
-        AnyView(EmptyView())
+    func send(action: any Action) {
+        parent?.push(type)
+        self.action = action
+    }
+    
+    func pop(_ screens: [any AppScreen]) {
+        popedPages.append(contentsOf: screens)
+    }
+    
+    func build(screen: any AppScreen) -> (any View)? {
+        EmptyView()
     }
 }

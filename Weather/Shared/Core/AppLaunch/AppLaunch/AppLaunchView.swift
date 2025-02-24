@@ -15,11 +15,17 @@ struct AppLaunchView: View {
         NavigationStack(path: $coordinator.path) {
             EmptyView()
                 .navigationDestination(for: WeatherAppScreen.self) { page in
-                   coordinator.build(screen: page) ?? AnyView(EmptyView())
+                    buildView(coordinator.build(screen: page) ?? EmptyView())
                 }
         }
-        .onAppear() {
+        .onAppear {
             viewModel.registerAuthStateHandler()
         }
     }
+    
+    @ViewBuilder
+    private func buildView(_ view: any View) -> some View {
+        AnyView(view)
+    }
+
 }

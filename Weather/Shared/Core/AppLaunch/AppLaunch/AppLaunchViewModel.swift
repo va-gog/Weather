@@ -14,6 +14,7 @@ import Combine
 import CoreLocation
 
 final class AppLaunchViewModel: ObservableObject {
+    
     @Published var coordinator: any CoordinatorInterface
     
     @Dependency private var locationService: LocationServiceInterface
@@ -22,9 +23,10 @@ final class AppLaunchViewModel: ObservableObject {
     private var authStateHandler: AuthStateDidChangeListenerHandle?
     private var cancelable: AnyCancellable?
     
-    init(coordinator: any CoordinatorInterface) {
+    init(coordinator: any CoordinatorInterface, locationService: LocationServiceInterface? = nil, auth: AuthInterface? = nil) {
         self.coordinator = coordinator
         registerDependencies()
+        injectMocks(locationService, auth)
     }
     
     private func registerDependencies() {
@@ -55,8 +57,9 @@ final class AppLaunchViewModel: ObservableObject {
                     cancelable = locationService.statusSubject
                         .dropFirst()
                         .sink { [weak self] status in
-                            status == .authorized ? self?.coordinator.push(WeatherAppScreen.main) : self?.coordinator.push(WeatherAppScreen.locationAccess)
-                                self?.authStateHandler = nil
+                            let screen = status == .authorized ? WeatherAppScreen.main : WeatherAppScreen.locationAccess
+                            self?.coordinator.push(screen)
+                            self?.authStateHandler = nil
                     }
                     locationService.requestWhenInUseAuthorization()
                 case .authorized:
@@ -68,5 +71,14 @@ final class AppLaunchViewModel: ObservableObject {
                 }
             }
         })
+    }
+    
+    private func injectMocks(_ locationService: LocationServiceInterface? = nil, _ auth: AuthInterface? = nil) {
+        if let locationService {
+            self.locationService = locationService
+        }
+        if let auth {
+            self.auth = auth
+        }
     }
 }

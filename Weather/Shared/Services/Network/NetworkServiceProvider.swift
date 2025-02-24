@@ -11,6 +11,12 @@ import Combine
 struct NetworkServiceProvider: NetworkServiceProtocol {    
     @Dependency private var sessionManager: URLSessionManagerProtocol
     
+    init(sessionManager: URLSessionManagerProtocol? = nil) {
+        if let sessionManager {
+            self.sessionManager = sessionManager
+        }
+    }
+    
     func requestJSON(_ request: NetworkRequest) -> AnyPublisher<Data, NetworkError> {
         guard let url = URL(string: request.path) else {
             return Fail(error: NetworkError.badURL).eraseToAnyPublisher()

@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Main: Decodable {
+struct Main: Decodable, Equatable {
     let temp: Double
     let tempMin: Double
     let tempMax: Double

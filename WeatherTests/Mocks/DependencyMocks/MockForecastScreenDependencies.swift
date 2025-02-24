@@ -6,9 +6,3 @@
 //
 
 @testable import Weather
-
-struct MockForecastScreenDependencies: ForecastScreenDependenciesInterface {
-    var networkService: NetworkServiceProtocol = MockNetworkManager()
-    var auth: AuthInterface = MockAuth()
-    var infoConverter: WeatherInfoToPresentationInfoConverterInterface = MockWeatherInfoToPresentationInfoConverter()
-}

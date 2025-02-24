@@ -27,11 +27,15 @@ final class ForecastViewModel: Reducer, ObservableObject {
     init(selectedCity: City,
          style: WeatherDetailsViewStyle,
          coordinator: CoordinatorInterface,
-         currentInfo: WeatherCurrentInfo?) {
+         currentInfo: WeatherCurrentInfo?,
+         networkService: NetworkServiceProtocol? = nil,
+         auth: AuthInterface? = nil,
+         infoConverter: WeatherInfoToPresentationInfoConverterInterface? = nil) {
         self.selectedCity = selectedCity
         self.style = style
         self.coordinator = coordinator
         self.state.currentInfo = currentInfo
+        injectDependencies(networkService, auth, infoConverter)
         
         observableReducer()
     }
@@ -53,6 +57,17 @@ final class ForecastViewModel: Reducer, ObservableObject {
         default: break
         }
         
+    }
+    
+    private func injectDependencies(
+        _ networkService: NetworkServiceProtocol? = nil,
+        _ auth: AuthInterface? = nil,
+        _ infoConverter: WeatherInfoToPresentationInfoConverterInterface? = nil) {
+            if let networkService, let auth, let infoConverter {
+                self.networkService = networkService
+                self.auth = auth
+                self.infoConverter = infoConverter
+            }
     }
     
     private func addFavoriteWeather() {

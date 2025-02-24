@@ -13,8 +13,12 @@ class KeychainManager: KeychainManagerInterface {
 
     private let service: String
     
-    init(service: String = "com.default.identifier") {
+    init(service: String = "com.default.identifier",
+         keychain: KeychainInterface? = nil) {
         self.service = service
+        if let keychain {
+            self.keychain = keychain
+        }
     }
     
     func saveItem(data: Data?, key: String, secClass: CFString) throws {

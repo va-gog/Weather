@@ -11,8 +11,8 @@ import CoreLocation
 @testable import Weather
 
 class LocationServiceTests: XCTestCase {
-    private var locationService: LocationService!
     private var mockLocationManager: MockLocationManager!
+    private var locationService: LocationService!
     private var cancellables: Set<AnyCancellable>!
 
     override func setUp() {
@@ -23,9 +23,9 @@ class LocationServiceTests: XCTestCase {
     }
 
     override func tearDown() {
-        mockLocationManager = nil
-        locationService = nil
         cancellables = nil
+        locationService = nil
+        mockLocationManager = nil
         super.tearDown()
     }
     

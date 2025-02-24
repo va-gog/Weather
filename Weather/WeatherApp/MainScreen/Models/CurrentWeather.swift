@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct CurrentWeather: Decodable {
+struct CurrentWeather: Decodable, Equatable {
     let id: Double
     let name: String
     let weather: [Weather]

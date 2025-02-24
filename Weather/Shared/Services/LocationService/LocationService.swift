@@ -14,8 +14,11 @@ final class LocationService: NSObject, CLLocationManagerDelegate, LocationServic
     
     @Dependency private var manager: LocationManagerInterface
     
-    override init() {
+    init(manager: LocationManagerInterface? = nil) {
         super.init()
+        if let manager {
+            self.manager = manager
+        }
         self.manager.delegate = self
         self.manager.desiredAccuracy = kCLLocationAccuracyBest
     }

@@ -24,16 +24,15 @@ final class MainScreenViewModel: Reducer, ObservableObject {
     
     private var coordinator: (any CoordinatorInterface)?
     
-    init(coordinator: any CoordinatorInterface) {
+    init(coordinator: any CoordinatorInterface,
+         locationService: LocationServiceInterface? = nil,
+         storageManager: StorageManagerInterface? = nil,
+         networkService: NetworkServiceProtocol? = nil,
+         auth: AuthInterface? = nil) {
         self.coordinator = coordinator
         observableReducer()
-
-        locationService.statusSubject
-            .receive(on: RunLoop.main)
-            .sink { [weak self] status in
-                self?.state.locationStatus = status
-            }
-            .store(in: &cancelables)
+        injectDependencyMocks(locationService, storageManager, networkService, auth)
+        setupObservers()
     }
     
     func send(_ action: Action) {
@@ -57,6 +56,25 @@ final class MainScreenViewModel: Reducer, ObservableObject {
         default:
             break
         }
+    }
+    
+    func injectDependencyMocks(_ locationService: LocationServiceInterface?, _ storageManager: StorageManagerInterface?, _ networkService: NetworkServiceProtocol?, _ auth: AuthInterface?) {
+        if let locationService, let storageManager, let networkService, let auth {
+            self._locationService.injectMock(locationService)
+            self._storageManager.injectMock(storageManager)
+            self._networkService.injectMock(networkService)
+            self._auth.injectMock(auth)
+        }
+      
+    }
+    
+    private func setupObservers() {
+        locationService.statusSubject
+            .receive(on: RunLoop.main)
+            .sink { [weak self] status in
+                self?.state.locationStatus = status
+            }
+            .store(in: &cancelables)
     }
     
     func weatherCardViewPresentationInfo(weatherInfo: WeatherCurrentInfo) -> WeatherCardViewInfo {
@@ -87,7 +105,7 @@ final class MainScreenViewModel: Reducer, ObservableObject {
         guard let index = state.weatherInfo.firstIndex(where: { $0.currentWeather.name == info.name } ) else { return }
         let coordinates = StoreCoordinates(latitude: info.coord.lat,
                                            longitude: info.coord.lon,
-                                           index: index - 1)
+                                           index: index )
         storageManager.removeObject(with: auth.authenticatedUser?.uid,
                                                  info: coordinates)
         Task { @MainActor in

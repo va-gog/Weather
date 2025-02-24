@@ -9,14 +9,15 @@
 import RealmSwift
 
 final class MockDataStorageManager: StorageManagerInterface {
-    
-    var storageService: StorageServiceInterface
+    @Dependency var storageService: StorageServiceInterface
     var coordinates: [Coordinates]?
     var addedItemID: String?
     var storedItem: StorableInfo?
     
-    init(storageService: StorageServiceInterface) {
-        self.storageService = storageService
+    init(storageService: StorageServiceInterface? = nil) {
+        if let storageService {
+            self.storageService = storageService
+        }
     }
     
     func fetchStoredCoordinates(by id: String?) -> [Coordinates] {

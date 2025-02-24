@@ -11,6 +11,12 @@ import Foundation
 final class StorageService: StorageServiceInterface {
     @Dependency private var storage: StorageInterface
     
+    init(storage: StorageInterface? = nil) {
+        if let storage {
+            self.storage = storage
+        }
+    }
+    
     func addItem(info: StorableInfo, type: Storable.Type, object: Storable) throws {
         do {
             if let userInfo = storage.objects(type).filter( { $0.id == object.id }).first {

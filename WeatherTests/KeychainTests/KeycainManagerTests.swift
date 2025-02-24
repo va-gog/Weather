@@ -10,19 +10,19 @@ import XCTest
 
 class KeychainManagerTests: XCTestCase {
     var keychainManager: KeychainManager!
-    var mockKeychain: MockKeychain!
+    @Dependency var mockKeychain: MockKeychain!
     
     override func setUp() {
         super.setUp()
-        mockKeychain = MockKeychain()
-        keychainManager = KeychainManager(keychain: mockKeychain,
-                                          service: "test")
+        self._mockKeychain.injectMock(MockKeychain())
+        keychainManager = KeychainManager(service: "test",
+                                          keychain: mockKeychain)
     }
     
     override func tearDown() {
-        mockKeychain = nil
-        keychainManager = nil
         super.tearDown()
+        keychainManager = nil
+        mockKeychain = nil
     }
     
     func testSaveItemSuccess() {

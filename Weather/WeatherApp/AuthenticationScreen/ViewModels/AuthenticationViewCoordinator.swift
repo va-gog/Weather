@@ -7,17 +7,16 @@
 
 import SwiftUI
 
-final class AuthenticationViewCoordinator: CoordinatorInterface {    
+final class AuthenticationViewCoordinator: CoordinatorInterface {
+    var reducer: (any Reducer)?
     var type: any AppScreen = WeatherAppScreen.authentication
     var parent: (any CoordinatorInterface)?
     var childs: [any CoordinatorInterface] = []
         
-    func build(screen: any AppScreen) -> AnyView? {
-        AnyView(
+    func build(screen: any AppScreen) -> (any View)?  {
         AuthenticationView()
             .environmentObject(AuthenticationViewModel())
             .navigationBarBackButtonHidden(true)
             .navigationBarHidden(true)
-        )
     }
 }

@@ -10,5 +10,4 @@ import SwiftUI
 struct LoadingViewPresentationInfo {
     var circularViewTint = Color.primary
     var fontSize: CGFloat = 200
-    
 }

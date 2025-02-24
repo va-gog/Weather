@@ -21,7 +21,11 @@ final class AuthenticationViewModel: ObservableObject, Reducer {
     
     private var authStateHandler: AuthStateDidChangeListenerHandle?
     
-    init() {
+    init(keychain: KeychainManagerInterface? = nil, auth: AuthInterface? = nil) {
+        if let keychain, let auth {
+            self.keychain = keychain
+            self.auth = auth
+        }
         observableReducer()
     }
     

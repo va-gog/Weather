@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Weather: Decodable {
+struct Weather: Decodable, Equatable {
     let main: String
     let icon: String
 }

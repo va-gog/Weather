@@ -8,19 +8,20 @@
 import SwiftUI
 
 final class MainScreenCoordinator: CoordinatorInterface {
+    var reducer: (any Reducer)?
+    
     var type: any AppScreen = WeatherAppScreen.main
     var parent: (any CoordinatorInterface)?
     var childs: [any CoordinatorInterface] = []
-    
-    var mainScreenViewModel: MainScreenViewModel?
-    
-    init(parent: (any CoordinatorInterface)?,
-         mainScreenViewModel: MainScreenViewModel? = nil) {
+        
+    init(parent: (any CoordinatorInterface)? = nil,
+         reducer: (any Reducer)? = nil) {
         self.parent = parent
-        self.mainScreenViewModel = mainScreenViewModel
+        self.reducer = reducer
     }
 
     func push(_ screen: any AppScreen) {
+        // check if push should be made by curret view or parent
         parent?.push(screen)
     }
     
@@ -33,13 +34,13 @@ final class MainScreenCoordinator: CoordinatorInterface {
         parent?.pop(screens)
     }
 
-    func build(screen: any AppScreen) -> AnyView? {
+    func build(screen: any AppScreen) -> (any View)? {
         guard let screen = screen as? WeatherAppScreen, let type = type as? WeatherAppScreen else { return nil }
         if screen == type {
-            guard let mainScreenViewModel else { return nil }
+            guard let reducer = reducer as? MainScreenViewModel else { return nil }
             return AnyView(
                 MainView()
-                    .environmentObject(mainScreenViewModel)
+                    .environmentObject(reducer)
                     .navigationBarBackButtonHidden(true)
                     .navigationTitle(LocalizedText.weather)
             )
@@ -68,12 +69,12 @@ final class MainScreenCoordinator: CoordinatorInterface {
     
     private func popForecastViewWhenDeleted(info: WeatherCurrentInfo?) {
         guard let info else { return }
-        mainScreenViewModel?.send(MainScreenAction.deleteButtonPressed(info.currentWeather))
+        reducer?.send(MainScreenAction.deleteButtonPressed(info.currentWeather))
     }
     
     private func popForecastViewWhenAdded(info: WeatherCurrentInfo?) {
         guard let info else { return }
-        mainScreenViewModel?.send(MainScreenAction.addButtonPressed(info))
+        reducer?.send(MainScreenAction.addButtonPressed(info))
     }
     
     private func pushForecastView(selectedCity: City, style: WeatherDetailsViewStyle, currentInfo: WeatherCurrentInfo?) {
@@ -82,7 +83,7 @@ final class MainScreenCoordinator: CoordinatorInterface {
                                                 style: style,
                                                 coordinator: coordinator,
                                                 currentInfo: currentInfo)
-        coordinator.forecastScreenViewModel = viewModel
+        coordinator.reducer = viewModel
         childs.append(coordinator)
         
         push(WeatherAppScreen.forecast)

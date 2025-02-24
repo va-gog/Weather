@@ -6,8 +6,3 @@
 //
 
 @testable import Weather
-
-struct MockAuthenticationScreenDependencies: AuthenticationScreenDependenciesInterface {
-    var keychain: KeychainManagerInterface
-    var auth: AuthInterface
-}

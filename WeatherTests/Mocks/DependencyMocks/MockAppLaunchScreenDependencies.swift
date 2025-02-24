@@ -7,7 +7,3 @@
 
 @testable import Weather
 
-struct MockAppLaunchScreenDependencies: AppLaunchScreenDependenciesInterface {
-    var locationService: LocationServiceInterface = MockLocationService()
-    var auth: AuthInterface = MockAuth()
-}

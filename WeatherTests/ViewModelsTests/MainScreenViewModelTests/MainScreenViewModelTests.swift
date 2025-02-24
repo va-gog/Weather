@@ -9,60 +9,96 @@
 import XCTest
 import CoreLocation
 import Combine
-
 import SwiftUI
 
-final class MockMainScreenCoordinator: MainScreenCoordinatorInterface {
-    var type: AppPages = .main
-    var parent: CoordinatorInterface?
-    var childs: [CoordinatorInterface] = []
-    var dependenciesManager: DependencyManagerInterface
-    var selectedCity: City?
-    var style: WeatherDetailsViewStyle?
-    var currentInfo: WeatherCurrentInfo?
-    var popedPage: [AppPages] = []
-    var pushedPage: AppPages?
+final class MockReducer: Reducer {
+    
+    final class MockState: ReducerState {
+        var action: Action?
+    }
+    var cancelables: [AnyCancellable] = []
+    var state: MockState = MockState()
+    
+    func send(_ action: Action) {
+        state.action = action
+    }
+}
 
-    init( dependenciesManager: DependencyManagerInterface) {
-        self.dependenciesManager = dependenciesManager
-    }
-    
-    func push(page: AppPages) {
-        pushedPage = page
-    }
-    
-    func pop(pages: [AppPages]) {
-        popedPage = pages
-    }
-    
-    func build(screen: AppPages) -> AnyView? {
-        AnyView(EmptyView())
-    }
-    
-    func pushForecastView(selectedCity: City, style: WeatherDetailsViewStyle, currentInfo: WeatherCurrentInfo?) {
-        self.selectedCity = selectedCity
-        self.style = style
-        self.currentInfo = currentInfo
-    }
-    func popForecastViewWhenDeleted(info: WeatherCurrentInfo?) {
-        currentInfo = info
-    }
-    
-    func popForecastViewWhenAdded(info: WeatherCurrentInfo?) {
-        currentInfo = info
+class MainScreenCoordinatorTests: XCTestCase {
+    var coordinator: MainScreenCoordinator!
+    var parentCoordinator: MockCoordinator!
+    var reducer: MockReducer!
 
+    override func setUp() {
+        super.setUp()
+        reducer = MockReducer()
+        parentCoordinator = MockCoordinator(type: WeatherAppScreen.launch)
+        coordinator = MainScreenCoordinator(parent: parentCoordinator)
+        coordinator.reducer = reducer
+    }
+
+    override func tearDown() {
+        super.tearDown()
+        reducer = nil
+        coordinator = nil
+    }
+    
+    func testCoordinatorSendPushActionToParent() {
+        let currentWeather = CurrentWeather(id: 123,
+                                            name: "Test",
+                                            weather: [Weather(main: "Main",
+                                                              icon: "")],
+                                            main: Main(temp: 5,
+                                                       tempMin: 2,
+                                                       tempMax: 3),
+                                            coord: Coordinates(lon: 10, lat: 10))
+        let city = City(name: "Test", lat: 10, lon: 10)
+        let info = WeatherCurrentInfo(currentWeather: currentWeather)
+        coordinator.send(action: MainScreenAction.Delegate.pushForecastView(city, .overlay, info))
+        XCTAssertEqual(coordinator.childs.first?.type as? WeatherAppScreen, WeatherAppScreen.forecast)
+        XCTAssertTrue(coordinator.childs.first is ForecastScreenCoordinator)
+        XCTAssertTrue(coordinator.childs.first?.reducer is ForecastViewModel)
+
+        XCTAssertTrue(parentCoordinator.pushedPages.contains(where: { $0 as? WeatherAppScreen == WeatherAppScreen.forecast }))
+    }
+    
+    func testCoordinatorSendPopActionToParent() {
+        let expectedWeather = CurrentWeather(id: 123,
+                                            name: name,
+                                            weather: [Weather(main: "Main",
+                                                              icon: "")],
+                                            main: Main(temp: 5,
+                                                       tempMin: 2,
+                                                       tempMax: 3),
+                                            coord: Coordinates(lon: 10, lat: 10))
+        let expectedInfo = WeatherCurrentInfo(currentWeather: expectedWeather)
+        
+        coordinator.send(action:  MainScreenAction.Delegate.popForecastViewWhenAdded(expectedInfo))
+        if let action = reducer.state.action as? MainScreenAction,
+           case let .addButtonPressed(info) = action {
+            XCTAssertEqual(info, expectedInfo)
+        } else {
+            XCTFail("Expected popForecastViewWhenAdded action but got something else")
+        }
+            
+        coordinator.send(action:  MainScreenAction.Delegate.popForecastViewWhenDeleted(expectedInfo))
+        if let action = reducer.state.action as? MainScreenAction,
+           case let .deleteButtonPressed(currentWeather) = action {
+            XCTAssertEqual(currentWeather, expectedWeather)
+        } else {
+            XCTFail("Expected popForecastViewWhenAdded action but got something else")
+        }
     }
 }
 
 class MainScreenViewModelTests: XCTestCase {
     var viewModel: MainScreenViewModel!
-    var mockDependencyManager: MockDependencyManager!
     var mockLocationService: MockLocationService!
     var mockStorageService: MockDataStorageService!
     var mockStorageManager: MockDataStorageManager!
     var mockNetworkManager: MockNetworkManager!
-    var coordinator: MockMainScreenCoordinator!
     var mockAuth: MockAuth!
+    var coordinator: MockCoordinator!
     var cancellables: Set<AnyCancellable>!
 
     override func setUp() {
@@ -72,19 +108,18 @@ class MainScreenViewModelTests: XCTestCase {
         mockStorageManager = MockDataStorageManager(storageService: mockStorageService)
         mockNetworkManager = MockNetworkManager()
         mockAuth = MockAuth()
-        mockDependencyManager = MockDependencyManager(auth: mockAuth,
-                                                      storageManager: mockStorageManager,
-                                                      networkService: mockNetworkManager,
-                                                      locationService: mockLocationService)
-        coordinator = MockMainScreenCoordinator(dependenciesManager: mockDependencyManager)
-
-        viewModel = MainScreenViewModel(coordinator: coordinator)
+        coordinator = MockCoordinator(type: WeatherAppScreen.main)
+        viewModel = MainScreenViewModel(coordinator: coordinator,
+                                        locationService: mockLocationService,
+                                        storageManager: mockStorageManager,
+                                        networkService: mockNetworkManager,
+                                        auth: mockAuth)
+        coordinator.reducer = viewModel
         cancellables = []
     }
 
     override func tearDown() {
         viewModel = nil
-        mockDependencyManager = nil
         mockStorageManager = nil
         mockNetworkManager = nil
         mockLocationService = nil
@@ -104,11 +139,18 @@ class MainScreenViewModelTests: XCTestCase {
                                                        tempMax: 3),
                                             coord: Coordinates(lon: 10, lat: 10))
         let info = WeatherCurrentInfo(currentWeather: currentWeather)
-        viewModel.weatherSelected(with: info)
-        XCTAssertEqual(coordinator.selectedCity?.name, currentWeather.name)
-        XCTAssertEqual(coordinator.selectedCity?.lat, currentWeather.coord.lat)
-        XCTAssertEqual(coordinator.selectedCity?.lon, currentWeather.coord.lon)
-        XCTAssertEqual(coordinator.style, WeatherDetailsViewStyle.overlayAdded)
+        viewModel.send(MainScreenAction.weatherSelected(info))
+        XCTAssertNotNil(coordinator.action)
+        XCTAssertTrue(coordinator.action is MainScreenAction.Delegate)
+        
+        if let action = coordinator.action as? MainScreenAction.Delegate,
+           case let .pushForecastView(receivedCity, receivedStyle, receivedWeatherInfo) = action {
+            XCTAssertEqual(receivedCity.name, currentWeather.name)
+            XCTAssertEqual(receivedStyle, WeatherDetailsViewStyle.overlayAdded)
+            XCTAssertEqual(receivedWeatherInfo?.id, info.id)
+        } else {
+            XCTFail("Expected pushForecastView action but got something else")
+        }
     }
         
         func testCitySelected() {
@@ -122,17 +164,19 @@ class MainScreenViewModelTests: XCTestCase {
                                                            tempMin: 2,
                                                            tempMax: 3),
                                                 coord: Coordinates(lon: 10, lat: 10))
-            let info = WeatherCurrentInfo(currentWeather: currentWeather)
-            viewModel.citySelected(city)
+            viewModel.send(MainScreenAction.citySelected(city))
+            XCTAssertNotNil(coordinator.action)
+            XCTAssertTrue(coordinator.action is MainScreenAction.Delegate)
             
-            XCTAssertEqual(coordinator.selectedCity?.name, city.name)
-            XCTAssertEqual(coordinator.selectedCity?.lat, city.lat)
-            XCTAssertEqual(coordinator.selectedCity?.lon, city.lon)
-            XCTAssertEqual(coordinator.style, WeatherDetailsViewStyle.overlay)
-            
-            viewModel.weatherInfo = [info]
-            viewModel.citySelected(city)
-            XCTAssertEqual(coordinator.style, WeatherDetailsViewStyle.overlayAdded)
+            if let action = coordinator.action as? MainScreenAction.Delegate,
+               case let .pushForecastView(receivedCity, receivedStyle, receivedWeatherInfo) = action {
+                
+                XCTAssertEqual(receivedCity.name, currentWeather.name)
+                XCTAssertEqual(receivedStyle, WeatherDetailsViewStyle.overlay)
+                XCTAssertNil(receivedWeatherInfo?.id)
+            } else {
+                XCTFail("Expected pushForecastView action but got something else")
+            }
         }
         
         func testDeleteButtonPressed() {
@@ -147,9 +191,8 @@ class MainScreenViewModelTests: XCTestCase {
                                                 coord: Coordinates(lon: 10, lat: 10))
             let info = WeatherCurrentInfo(currentWeather: currentWeather)
             
-            viewModel.weatherInfo = [info, info]
-            
-            viewModel.$weatherInfo
+            viewModel.state.weatherInfo = [info, info]
+            viewModel.state.$weatherInfo
                 .dropFirst()
                 .sink { info in
                     XCTAssertEqual(info.count, 1)
@@ -157,7 +200,7 @@ class MainScreenViewModelTests: XCTestCase {
                 }
                 .store(in: &cancellables)
             
-            viewModel.deleteButtonPressed(info: info.currentWeather)
+            viewModel.send(MainScreenAction.deleteButtonPressed(info.currentWeather))
             wait(for: [expectation], timeout: 1.0)
         }
         
@@ -175,40 +218,18 @@ class MainScreenViewModelTests: XCTestCase {
             let info = WeatherCurrentInfo(currentWeather: currentWeather)
             mockAuth.user = MockUser(uid: expectedID)
             
-            viewModel.$weatherInfo
+            viewModel.state.$weatherInfo
                 .dropFirst()
                 .sink { info in
                     XCTAssertEqual(info.count, 1)
                     XCTAssertEqual(self.mockStorageManager.addedItemID, expectedID)
-
                     expectation.fulfill()
                 }
                 .store(in: &cancellables)
             
-            viewModel.addButtonPressed(info: info)
+            viewModel.send(MainScreenAction.addButtonPressed(info))
             wait(for: [expectation], timeout: 1.0)
         }
-    
-    func testGetCurrentLocationInfoSuccess() async {
-        do {
-            let location = try await viewModel.getCurrentLocationInfo()
-            XCTAssertEqual(location.coordinate.latitude, 50.0)
-            XCTAssertEqual(location.coordinate.longitude, -50.0)
-        } catch {
-            XCTFail("Expected successful location fetch, but threw an error: \(error)")
-        }
-    }
-    
-    func testGetCurrentLocationInfoFailure() async {
-        mockLocationService.shouldFail = true 
-
-        do {
-            let _ = try await viewModel.getCurrentLocationInfo()
-            XCTFail("Expected an error, but location fetch was successful")
-        } catch {
-            XCTAssertEqual(error as? AppError, AppError.locationFetchFail)
-        }
-    }
     
     func testSearchWithSuccessfulResponse() {
         let sampleCities = [City(name: "City1", lat: 10, lon: 10), City(name: "City2", lat: 20, lon: 20)]
@@ -216,7 +237,7 @@ class MainScreenViewModelTests: XCTestCase {
 
         let expectation = XCTestExpectation(description: "Successful search")
         
-        viewModel.$searchResult
+        viewModel.state.$searchResult
             .dropFirst()
             .sink { cities in
                 XCTAssertEqual(cities.count, sampleCities.count)
@@ -225,7 +246,7 @@ class MainScreenViewModelTests: XCTestCase {
             }
             .store(in: &cancellables)
 
-        viewModel.searchWith(query: "query")
+        viewModel.send(MainScreenAction.searchWith("query"))
 
         wait(for: [expectation], timeout: 1.0)
     }
@@ -235,7 +256,7 @@ class MainScreenViewModelTests: XCTestCase {
 
         let expectation = XCTestExpectation(description: "Search")
         
-        viewModel.$searchState
+        viewModel.state.$searchState
             .dropFirst()
             .sink { state in
                 XCTAssertEqual(state, SearchState.searching)
@@ -243,7 +264,7 @@ class MainScreenViewModelTests: XCTestCase {
             }
             .store(in: &cancellables)
 
-        viewModel.searchWith(query: "query")
+        viewModel.send(MainScreenAction.searchWith("query"))
 
         wait(for: [expectation], timeout: 1.0)
     }
@@ -253,7 +274,7 @@ class MainScreenViewModelTests: XCTestCase {
 
         let expectation = XCTestExpectation(description: "Failed search")
         
-        viewModel.$searchState
+        viewModel.state.$searchState
             .dropFirst()
             .sink { state in
                 guard state != SearchState.searching else { return }
@@ -263,7 +284,7 @@ class MainScreenViewModelTests: XCTestCase {
             }
             .store(in: &cancellables)
 
-        viewModel.searchWith(query: "query")
+        viewModel.send(MainScreenAction.searchWith("query"))
 
         wait(for: [expectation], timeout: 1.0)
     }
@@ -273,7 +294,7 @@ class MainScreenViewModelTests: XCTestCase {
 
         let expectation = XCTestExpectation(description: "Empty search results")
         
-        viewModel.$searchState
+        viewModel.state.$searchState
             .dropFirst(1)
             .sink { state in
                 guard state != SearchState.searching else { return }
@@ -282,7 +303,7 @@ class MainScreenViewModelTests: XCTestCase {
             }
             .store(in: &cancellables)
 
-        viewModel.searchWith(query: "query")
+        viewModel.send(MainScreenAction.searchWith("query"))
 
         wait(for: [expectation], timeout: 1.0)
     }
@@ -304,13 +325,13 @@ class MainScreenViewModelTests: XCTestCase {
         
         let expectation = XCTestExpectation(description: "Succeeded location fetch")
 
-        viewModel.$fetchState
+        viewModel.state.$fetchState
             .sink { state in
                 switch state {
                 case .none:
                     break
                 case .succeed:
-                    XCTAssertEqual(self.viewModel.weatherInfo.count, 1)
+                    XCTAssertEqual(self.viewModel.state.weatherInfo.count, 1)
                     XCTAssertTrue(self.mockNetworkManager.request is CurrentWeatherRequest)
                     expectation.fulfill()
                 default:
@@ -321,7 +342,7 @@ class MainScreenViewModelTests: XCTestCase {
             }
             .store(in: &cancellables)
 
-        await viewModel.fetchWeatherInfo()
+        viewModel.send(MainScreenAction.fetchWeatherInfo)
 
         await fulfillment(of: [expectation], timeout:  2.0)
     }
@@ -345,7 +366,7 @@ class MainScreenViewModelTests: XCTestCase {
         
         let expectation = XCTestExpectation(description: "Succeeded location fetch")
         
-        viewModel.$weatherInfo
+        viewModel.state.$weatherInfo
             .dropFirst(2)
             .sink { info in
                 XCTAssertEqual(info.count, 3)
@@ -355,7 +376,7 @@ class MainScreenViewModelTests: XCTestCase {
             }
             .store(in: &cancellables)
         
-        await viewModel.fetchWeatherInfo()
+        viewModel.send(MainScreenAction.fetchWeatherInfo)
         await fulfillment(of: [expectation], timeout:  2.0)
     }
     
@@ -363,7 +384,7 @@ class MainScreenViewModelTests: XCTestCase {
         mockLocationService.shouldFail = true
         
         let expectation = XCTestExpectation(description: "Failed location fetch")
-        viewModel.$fetchState
+        viewModel.state.$fetchState
             .sink { state in
                 switch state {
                 case .none:
@@ -377,7 +398,7 @@ class MainScreenViewModelTests: XCTestCase {
             }
             .store(in: &cancellables)
 
-        await viewModel.fetchWeatherInfo()
+        viewModel.send(MainScreenAction.fetchWeatherInfo)
 
         await fulfillment(of: [expectation], timeout:  1.0)
     }
@@ -386,7 +407,7 @@ class MainScreenViewModelTests: XCTestCase {
         mockNetworkManager.stubbedError = NetworkError.badURL
         
         let expectation = XCTestExpectation(description: "Failed location fetch")
-        viewModel.$fetchState
+        viewModel.state.$fetchState
             .sink { state in
                 switch state {
                 case .none:
@@ -400,17 +421,16 @@ class MainScreenViewModelTests: XCTestCase {
             }
             .store(in: &cancellables)
 
-        await viewModel.fetchWeatherInfo()
-
+        viewModel.send(MainScreenAction.fetchWeatherInfo)
         await fulfillment(of: [expectation], timeout:  1.0)
     }
     
-    func testLocationStatusUpdate() {
+    func testLocationStatusUpdate() async {
         let expectation = XCTestExpectation(description: "Location status should be updated")
         let expectedStatus: LocationAuthorizationStatus = .authorized
         
-        viewModel.$locationStatus
-            .dropFirst(2)
+        viewModel.state.$locationStatus
+            .dropFirst(1)
             .sink { status in
                 XCTAssertEqual(status, expectedStatus)
                 expectation.fulfill()
@@ -419,44 +439,8 @@ class MainScreenViewModelTests: XCTestCase {
         
         mockLocationService.change(status: expectedStatus)
         
-        wait(for: [expectation], timeout: 2.0)
+        await fulfillment(of: [expectation], timeout:  1.0)
     }
-    
-//    func testWeatherInfoAppendAndStorageUpdate() {
-//        let latitude = 10.0
-//        let longitude = 20.0
-//        let index = viewModel.weatherInfo.count
-//        mockAuth.user = MockUser(uid: "Test")
-//
-//        let expectation = XCTestExpectation(description: "Weather info should be appended and stored")
-//        let testWeatherInfo = WeatherCurrentInfo(id: UUID(),
-//                                                 currentWeather: CurrentWeather(id: 1,
-//                                                                                name: "",
-//                                                                                weather: [Weather(main: "",
-//                                                                                                  icon: "")],
-//                                                                                main: Main(temp: 10,
-//                                                                                           tempMin: 20,
-//                                                                                           tempMax: 30),
-//                                                                                coord: Coordinates(lon: longitude,
-//                                                                                                   lat: latitude)),
-//                                                 unit: .celsius,
-//                                                 isMyLocation: false)
-//        
-//        viewModel.$weatherInfo
-//            .dropFirst()
-//            .sink { [weak self] weatherInfoArray in
-//                XCTAssertEqual((self?.mockStorageManager.info as? StoreCoordinates)?.index, index)
-//                XCTAssertEqual((self?.mockStorageManager.info as? StoreCoordinates)?.latitude, latitude)
-//                XCTAssertEqual((self?.mockStorageManager.info as? StoreCoordinates)?.longitude, longitude)
-//                XCTAssertEqual(self?.mockStorageManager.object?.id, self?.mockAuth.currentUser?.uid)
-//                expectation.fulfill()
-//            }
-//            .store(in: &cancellables)
-//        
-//        viewModel.addedWaetherInfo.send(testWeatherInfo)
-//        
-//        wait(for: [expectation], timeout: 5.0)
-//    }
     
     func testWeatherCardViewPresentationInfo() {
         let coordinates = Coordinates(lon: 10.1093, lat: 20.2938)

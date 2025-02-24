@@ -13,6 +13,8 @@ final class MockAuth: AuthInterface {
     var user: MockUser?
     var signOutError: AppError?
     var signedOut = false
+    var signedInSucceed = false
+
                     
     var authenticatedUser: UserInterface? {
         user
@@ -22,12 +24,14 @@ final class MockAuth: AuthInterface {
         guard user != nil else {
             throw AuthenticationError.signin
         }
+        signedInSucceed = true
     }
     
     func signIn(withEmail email: String, password: String) async throws {
         guard user != nil else {
             throw AuthenticationError.signin
         }
+        signedInSucceed = true
     }
     
     func signOut() throws {

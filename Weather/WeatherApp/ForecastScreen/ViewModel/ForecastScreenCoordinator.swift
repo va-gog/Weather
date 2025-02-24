@@ -11,12 +11,12 @@ final class ForecastScreenCoordinator: CoordinatorInterface {
     var type: any AppScreen = WeatherAppScreen.forecast
     var parent: (any CoordinatorInterface)?
     var childs: [any CoordinatorInterface] = []
-    var forecastScreenViewModel: ForecastViewModel?
+    var reducer: (any Reducer)?
     
     init(parent: (any CoordinatorInterface)?,
-         forecastScreenViewModel: ForecastViewModel? = nil) {
+         reducer: (any Reducer)? = nil) {
         self.parent = parent
-        self.forecastScreenViewModel = forecastScreenViewModel
+        self.reducer = reducer
     }
         
     func send(action: Action) {
@@ -38,14 +38,14 @@ final class ForecastScreenCoordinator: CoordinatorInterface {
         parent?.pop(screens)
     }
     
-    func build(screen: any AppScreen) -> AnyView? {
+    func build(screen: any AppScreen) -> (any View)? {
         guard let screen = screen as? WeatherAppScreen, let type = type as? WeatherAppScreen else { return nil }
         if screen == type {
-            guard let forecastScreenViewModel else { return nil }
+            guard let reducer else { return nil }
             
             return AnyView(
                 WeatherDetailsView()
-                    .environmentObject(forecastScreenViewModel)
+                    .environmentObject(reducer)
             )
         } else {
             for child in childs {

@@ -11,6 +11,6 @@
 //    static var apiKey: String {
 //        /*fetch this securely, possibly from environment variables or secure storage
 //         This could be configured per environment in a CI/CD setup */
-//        "c44d8a4d7dbc0e470912963c69287a76"
+//        ""
 //    }
 //}

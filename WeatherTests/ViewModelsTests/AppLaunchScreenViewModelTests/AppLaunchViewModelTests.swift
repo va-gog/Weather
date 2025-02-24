@@ -10,28 +10,29 @@ import Combine
 @testable import Weather
 
 class AppLaunchViewModelTests: XCTestCase {
-
-    var viewModel: AppLaunchViewModel!
-    var coordinatorMock: MockCoordinator!
-    var dependenciesMock: MockDependencyManager!
+    
     var authMock: MockAuth!
     var locationServiceMock: MockLocationService!
+    var viewModel: AppLaunchViewModel!
+    var coordinatorMock: MockCoordinator!
     var cancellables: Set<AnyCancellable> = []
 
     override func setUp() {
         super.setUp()
         authMock = MockAuth()
         locationServiceMock = MockLocationService()
-        dependenciesMock = MockDependencyManager(auth: authMock,
-                                                 locationService: locationServiceMock)
-        coordinatorMock = MockCoordinator(type: .main,
-                                          dependenciesManager: dependenciesMock)
-        viewModel = AppLaunchViewModel(coordinator: coordinatorMock)
+
+        coordinatorMock = MockCoordinator(type: WeatherAppScreen.launch)
+        viewModel = AppLaunchViewModel(coordinator: coordinatorMock, locationService: locationServiceMock, auth: authMock)
     }
 
     override func tearDown() {
-        cancellables.removeAll()
         super.tearDown()
+        cancellables.removeAll()
+        authMock = nil
+        locationServiceMock = nil
+        viewModel = nil
+        coordinatorMock = nil
     }
 
     func testUserNotAuthenticated() {
@@ -40,17 +41,15 @@ class AppLaunchViewModelTests: XCTestCase {
         
         viewModel.registerAuthStateHandler()
         
-        XCTAssertEqual(self.coordinatorMock.pushedPage, AppPages.authentication)
+        XCTAssertTrue(self.coordinatorMock.pushedPages.contains(where: { $0 as? WeatherAppScreen == WeatherAppScreen.authentication }))
     }
     
     func testUserAuthenticatedLocationDenied() {
         authMock.signedOut = false
         authMock.user = MockUser(uid: "Test")
+        viewModel.registerAuthStateHandler()
         locationServiceMock.statusSubject.send(.denied)
-        
-        self.viewModel.registerAuthStateHandler()
-        
-        XCTAssertEqual(self.coordinatorMock.pushedPage, AppPages.locationAccess)
+            XCTAssertTrue(self.coordinatorMock.pushedPages.contains(where: { $0 as? WeatherAppScreen == WeatherAppScreen.locationAccess }))
     }
     
     func testUserAuthenticatedLocationAuthorized() {
@@ -60,7 +59,7 @@ class AppLaunchViewModelTests: XCTestCase {
         
         viewModel.registerAuthStateHandler()
         
-        XCTAssertEqual(self.coordinatorMock.pushedPage, AppPages.main)
+        XCTAssertTrue(self.coordinatorMock.pushedPages.contains(where: { $0 as? WeatherAppScreen == WeatherAppScreen.main }))
     }
 
     func testUserAuthenticatedLocationNotDetermined_UserDenied() {
@@ -70,7 +69,7 @@ class AppLaunchViewModelTests: XCTestCase {
         viewModel.registerAuthStateHandler()
         locationServiceMock.statusSubject.send(.denied)
         
-        XCTAssertEqual(self.coordinatorMock.pushedPage, AppPages.locationAccess)
+        XCTAssertTrue(self.coordinatorMock.pushedPages.contains(where: { $0 as? WeatherAppScreen == WeatherAppScreen.locationAccess }))
         XCTAssertTrue(self.locationServiceMock.requestWhenInUseAuthorizationCalled)
     }
 
@@ -82,7 +81,7 @@ class AppLaunchViewModelTests: XCTestCase {
         viewModel.registerAuthStateHandler()
         locationServiceMock.statusSubject.send(.authorized)
         
-        XCTAssertEqual(self.coordinatorMock.pushedPage, AppPages.main)
+        XCTAssertTrue(self.coordinatorMock.pushedPages.contains(where: { $0 as? WeatherAppScreen == WeatherAppScreen.main }))
         XCTAssertTrue(self.locationServiceMock.requestWhenInUseAuthorizationCalled)
     }
 }

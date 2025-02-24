@@ -1,5 +1,5 @@
 //
-//  Coordinator.swift
+//  AppLaunchScreenCoordinator.swift
 //  Weather
 //
 //  Created by Gohar Vardanyan on 08.11.24.
@@ -13,6 +13,7 @@ final class AppLaunchScreenCoordinator: CoordinatorInterface, ObservableObject {
     var type: any AppScreen = WeatherAppScreen.launch
     var parent: (any CoordinatorInterface)?
     var childs: [any CoordinatorInterface] = []
+    var reducer: (any Reducer)?
     
     func push(_ screen: any AppScreen) {
         switch screen {
@@ -24,7 +25,7 @@ final class AppLaunchScreenCoordinator: CoordinatorInterface, ObservableObject {
         case WeatherAppScreen.main:
             let coordinator = MainScreenCoordinator(parent: self)
             let viewModel = MainScreenViewModel(coordinator: coordinator)
-            coordinator.mainScreenViewModel = viewModel
+            coordinator.reducer = viewModel
             childs.removeAll()
             path.removeLast(path.count)
             childs.append(coordinator)
@@ -51,7 +52,7 @@ final class AppLaunchScreenCoordinator: CoordinatorInterface, ObservableObject {
         path.removeLast(screens.count)
     }
     
-    func build(screen: any AppScreen) -> AnyView? {
+    func build(screen: any AppScreen) -> (any View)?  {
         for child in childs {
             if let view = child.build(screen: screen) {
                 return view
